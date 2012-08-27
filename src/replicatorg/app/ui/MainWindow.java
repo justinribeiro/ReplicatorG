@@ -117,6 +117,7 @@ import replicatorg.app.syntax.PdeTextAreaDefaults;
 import replicatorg.app.syntax.SyntaxDocument;
 import replicatorg.app.syntax.TextAreaPainter;
 import replicatorg.app.ui.controlpanel.ControlPanelWindow;
+import replicatorg.app.ui.extras.mqttprefs.MqttPrefsWindow;
 import replicatorg.app.ui.modeling.EditingModel;
 import replicatorg.app.ui.modeling.PreviewPanel;
 import replicatorg.app.ui.onboard.OnboardParametersWindow;
@@ -163,6 +164,15 @@ import com.apple.mrj.MRJApplicationUtils;
 import com.apple.mrj.MRJOpenDocumentHandler;
 import com.apple.mrj.MRJPrefsHandler;
 import com.apple.mrj.MRJQuitHandler;
+
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
+import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
 
 public class MainWindow extends JFrame implements MRJAboutHandler, MRJQuitHandler,
 MRJPrefsHandler, MRJOpenDocumentHandler,
@@ -330,6 +340,7 @@ ToolpathGenerator.GeneratorListener
 		menubar.add(buildGCodeMenu());
 		menubar.add(buildMachineMenu());
 		menubar.add(buildThingiverseMenu());
+		menubar.add(buildRemoteMenu());
 		menubar.add(buildHelpMenu());
 		
 		setJMenuBar(menubar);
@@ -1421,10 +1432,30 @@ ToolpathGenerator.GeneratorListener
 			RealtimePanel window = RealtimePanel.getRealtimePanel(machineLoader.getMachineInterface());
 			if (window != null) {
 				window.pack();
+				window.setLocationRelativeTo(null);
 				window.setVisible(true);
 				window.toFront();
 			}
 		}
+	}
+	
+	/**
+	 * @returns menu
+	 */
+	protected JMenu buildRemoteMenu() {
+		JMenuItem item;
+		JMenu menu = new JMenu("Extras");
+
+		item = newJMenuItem("MQTT Settings", 'P');
+		item.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				handleExtraMQTTprefs();
+			}
+		
+		});
+		menu.add(item);
+
+		return menu;
 	}
 		
 	/**
@@ -1851,10 +1882,21 @@ ToolpathGenerator.GeneratorListener
 			ControlPanelWindow window = ControlPanelWindow.getControlPanel(machineLoader.getMachineInterface());
 			if (window != null) {
 				window.pack();
+				window.setLocationRelativeTo(null);
 				window.setVisible(true);
 				window.toFront();
 			}
 		}
+	}
+	
+	public void handleExtraMQTTprefs() {
+			MqttPrefsWindow window = MqttPrefsWindow.getPrefs();
+			if (window != null) {
+				window.pack();
+				window.setLocationRelativeTo(null);
+				window.setVisible(true);
+				window.toFront();
+			}
 	}
 
 	/**

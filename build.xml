@@ -36,6 +36,7 @@
 		<!-- include jarbundler -->
 		<fileset dir="build/macosx" includes="*.jar" />
 		<fileset dir="${lib.dir}" includes="*.jar" />
+		<filelist dir="${lib.dir}" files="mqttv3.jar"/> 
 		<pathelement path="/System/Library/Java" />
 	</path>
 

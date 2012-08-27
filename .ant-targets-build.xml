@@ -1,0 +1,9 @@
+[echo]
+cache-local-docs
+dist
+dist-common
+dist-common-plain
+dist-linux
+dist-macosx
+dist-windows
+help
