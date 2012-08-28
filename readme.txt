@@ -1,3 +1,8 @@
+Notes About My Branch
+==============================
+JDR: I'm adding in MQTT and some remote monitoring for a nifty little project I'm working on.
+==============================
+
 ReplicatorG is an open-source GCode based controller for RepRap / CNC machines.  It has 3 main goals:
 
 1. Be as simple to use, and as easy to install as possible.
