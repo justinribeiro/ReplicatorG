@@ -34,6 +34,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
+import javax.print.attribute.AttributeSet;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -46,6 +47,8 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.PlainDocument;
 
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -54,6 +57,7 @@ import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
 import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 
 import net.miginfocom.swing.MigLayout;
@@ -165,7 +169,12 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 		JLabel lbldPrinterName = new JLabel("Printer Name");
 		panel_1.add(lbldPrinterName, "cell 0 0,alignx right");
 		
+		// we're going to use 
+		MaxLengthTextDocument maxLength = new MaxLengthTextDocument();
+		maxLength.setMaxChars(23);
+		
 		fldPrinterName = new JTextField();
+		fldPrinterName.setDocument(maxLength);
 		fldPrinterName.setText(prefs.get("publishprintername", ""));
 		panel_1.add(fldPrinterName, "cell 1 0,growx");
 		fldPrinterName.setColumns(10);
@@ -230,19 +239,37 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 
 	protected void testConnection() {
 		
-		MqttClient client = null;
+		//Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
+		//MqttClient client = null;
 		
-		try {
-			
-			client = new MqttClient(fldAddress.getText(), fldPrinterName.getText());
-			client.connect();
-			client.disconnect();
-			lblConnectionTest.setText("Connection Successful!");
-
-		} catch (MqttException e) {
-
-			lblConnectionTest.setText("Connection Failed");
-		}
+		MqttCommunications clientTest = new MqttCommunications();
+		clientTest.testConnection(lblConnectionTest);
+		
+//		try {
+//			client = new MqttClient(fldAddress.getText(), fldPrinterName.getText());
+//			client.connect();
+//			
+//			String what = prefs.get("publishprintername", "");
+//			String who = prefs.get("publishorganization", "");
+//			String where = prefs.get("publishlocation", "");
+//			String topic = prefs.get("servertopic", "");
+//			
+//			String sendtobroker = what.concat("-").concat(who).concat("-").concat(where);
+//			
+//			MqttMessage message = new MqttMessage(sendtobroker.getBytes());
+//			message.setQos(0);
+//			client.getTopic(topic).publish(message);
+//			
+//			client.disconnect();
+//			lblConnectionTest.setText("Connection Successful!");
+//		} 
+//		catch (MqttSecurityException e1) {
+//			lblConnectionTest.setText("Connection failed: check your security credentials.");
+//		}
+//		catch (MqttException e2) {
+//
+//			lblConnectionTest.setText("Connection failed: check your server address.");
+//		}
 	}
 	
 	protected void saveMQTTprefs() {

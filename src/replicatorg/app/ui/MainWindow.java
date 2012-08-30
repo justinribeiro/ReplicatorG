@@ -117,6 +117,7 @@ import replicatorg.app.syntax.PdeTextAreaDefaults;
 import replicatorg.app.syntax.SyntaxDocument;
 import replicatorg.app.syntax.TextAreaPainter;
 import replicatorg.app.ui.controlpanel.ControlPanelWindow;
+import replicatorg.app.ui.extras.mqttprefs.MqttCommunications;
 import replicatorg.app.ui.extras.mqttprefs.MqttPrefsWindow;
 import replicatorg.app.ui.modeling.EditingModel;
 import replicatorg.app.ui.modeling.PreviewPanel;
@@ -185,7 +186,6 @@ ToolpathGenerator.GeneratorListener
 	private static final long serialVersionUID = 4144538738677712284L;
 
 	static final String WINDOW_TITLE = "ReplicatorG" + " - " + Base.VERSION_NAME;
-
 
 	final static String MODEL_TAB_KEY = "MODEL";
 	final static String GCODE_TAB_KEY = "GCODE";
@@ -302,6 +302,8 @@ ToolpathGenerator.GeneratorListener
 	}
 
 	private MRUList mruList;
+	
+	protected final MqttCommunications broker = new MqttCommunications();
 
 	public MainWindow() {
 		super(WINDOW_TITLE);
@@ -403,6 +405,8 @@ ToolpathGenerator.GeneratorListener
 		splitPane.setPreferredSize(new Dimension(600,600));
 		pane.add(splitPane,"growx,growy,shrinkx,shrinky");
 		pack();
+		
+		broker.run("ReplicatorG startup");
 
 		//		textarea.setTransferHandler(new TransferHandler() {
 		//			private static final long serialVersionUID = 2093323078348794384L;
@@ -2540,6 +2544,7 @@ ToolpathGenerator.GeneratorListener
 		maybeRunScript("scripts/complete.sh", handleOpenPath, String.valueOf(elapsed / 1000), time_string);
 
 		Base.showMessage("Build finished", message);
+		
 	}
 
 	private void notifyBuildAborted(Date started, Date aborted) {

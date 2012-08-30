@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
+import replicatorg.app.ui.extras.mqttprefs.MqttCommunications;
 import replicatorg.drivers.EstimationDriver;
 import replicatorg.machine.MachineListener;
 import replicatorg.machine.MachineProgressEvent;
@@ -49,7 +50,8 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 	static final private Color BG_ERROR = new Color(0xff, 0x80, 0x60);
 	static final private Color BG_READY = new Color(0x80, 0xff, 0x60);
 	static final private Color BG_BUILDING = new Color(0xff, 0xef, 0x00); // process yellow
-
+	
+	protected final MqttCommunications broker = new MqttCommunications();
 	
 	MachineStatusPanel() {
 		Font statusFont = Base.getFontPref("status.font","SansSerif,plain,12");
@@ -157,6 +159,9 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 			break;
 		}
 		
+		String stat = text.concat(" - ").concat(machineText);
+		broker.run(stat);
+		
 		updatePanel(bgColor, text, null, machineText);
 	}
 	
@@ -178,6 +183,7 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 					EstimationDriver.getBuildTimeString(event.getElapsed(), true),
 					EstimationDriver.getBuildTimeString(remaining, true));
 			
+			broker.run(s);
 			smallLabel.setText(s);
 		}
 	}
@@ -225,7 +231,10 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 					}
 				}
 				
+				broker.run(tempString);
+				
 				tempLabel.setText(tempString);
+				
 			}
 		});
 	}

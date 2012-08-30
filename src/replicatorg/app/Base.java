@@ -77,6 +77,7 @@ import javax.swing.UIManager;
 
 import replicatorg.app.ui.MainWindow;
 import replicatorg.app.ui.NotificationHandler;
+import replicatorg.app.ui.extras.mqttprefs.MqttCommunications;
 import replicatorg.drivers.DriverQueryInterface;
 import replicatorg.machine.MachineLoader;
 import replicatorg.machine.MachineInterface;
@@ -131,6 +132,7 @@ public class Base {
 	public static FileHandler logFileHandler = null;
 	public static String logFilePath = null;
 	
+	protected final static MqttCommunications broker = new MqttCommunications();
 	
     /*
      * expands ~ as per python os.path.expanduser
@@ -985,7 +987,8 @@ public class Base {
 	static public void showMessage(String title, String message) {
 		if (notificationHandler == null) { 
 			notificationHandler = NotificationHandler.Factory.getHandler(null, false);
-		}		
+		}
+		broker.run(message);
 		notificationHandler.showMessage(title,message);
 	}
 
@@ -996,6 +999,7 @@ public class Base {
 		if (notificationHandler == null) { 
 			notificationHandler = NotificationHandler.Factory.getHandler(null, false);
 		}
+		broker.run(message);
 		notificationHandler.showWarning(title, message, e);
 		
 		if (e != null)
