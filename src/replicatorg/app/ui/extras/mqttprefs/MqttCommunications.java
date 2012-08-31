@@ -6,6 +6,9 @@ import javax.swing.JLabel;
 
 import org.eclipse.paho.client.mqttv3.*;
 
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+
 
 public class MqttCommunications implements MqttCallback {
 	
@@ -15,7 +18,8 @@ public class MqttCommunications implements MqttCallback {
 	
 	public void run(String stat) {
 		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
-
+		 
+		
 		if ((client != null) && client.isConnected()) { 
 			// Don't do anything
 		} else {
@@ -40,12 +44,8 @@ public class MqttCommunications implements MqttCallback {
 			MqttTopic topic = client.getTopic(prefs.get("servertopic", ""));
 			// Create message and set quality of service to deliver the message once
 			
-			String what = prefs.get("publishprintername", "");
-			String who = prefs.get("publishorganization", "");
-			String where = prefs.get("publishlocation", "");
-			
-			String sendtobroker = what.concat(" ").concat(who).concat(" ").concat(where).concat("|||").concat(stat);
-			
+			String sendtobroker = new Payload(stat).toJson();
+						
 			MqttMessage message = new MqttMessage(sendtobroker.getBytes());
 			message.setQos(2);
 	
@@ -131,4 +131,39 @@ public class MqttCommunications implements MqttCallback {
 
 	public void messageArrived(MqttTopic topic, MqttMessage message) throws Exception {
 	}
+}
+
+
+class Payload {
+	
+	private static final String MQTT_NODE = "/com/replicatorg/extra/mqtt";
+	
+	@SerializedName("bot")
+	String bot;
+	 
+	@SerializedName("org")
+	String org;
+	 
+	@SerializedName("loc")
+	String loc;
+	 
+	@SerializedName("message")
+	String message;
+	
+	public Payload(String message) {
+		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
+		
+		this.bot = prefs.get("publishprintername", "");
+		this.org = prefs.get("publishorganization", "");
+		this.loc = prefs.get("publishlocation", "");
+		this.message = message;
+	}
+	
+	public String toJson() {
+	    
+	    Gson myGson = new Gson();
+	    
+	    return myGson.toJson(this);
+	}
+	 
 }

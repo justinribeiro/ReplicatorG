@@ -25,8 +25,9 @@
     <cp>./lib/RXTXcomm.jar</cp>
     <cp>./lib/vecmath.jar</cp>
     <cp>./lib/filedrop.jar</cp>
-	<cp>./lib/mqttv3.jar</cp>
+    <cp>./lib/mqttv3.jar</cp>
     <cp>./lib/ReplicatorG.jar</cp>
+    <cp>./lib/gson-2.2.2.jar</cp>
   </classPath>
   <jre>
     <path>java\</path>

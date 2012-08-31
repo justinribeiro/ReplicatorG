@@ -32,14 +32,16 @@
 
 	<property name="protocols.dir" value="${src.dir}/fabman/messages" />
 
+	<fileset id="addonlibs" dir="${lib.dir}" includes="mqttv3.jar,gson-2.2.2.jar" />
+
 	<path id="classpath">
 		<!-- include jarbundler -->
 		<fileset dir="build/macosx" includes="*.jar" />
 		<fileset dir="${lib.dir}" includes="*.jar" />
-		<filelist dir="${lib.dir}" files="mqttv3.jar"/> 
+		
 		<pathelement path="/System/Library/Java" />
 	</path>
-
+	
 	<path id="test.cp">
 		<path refid="classpath" />
 		<pathelement path="test/lib/testng.jar" />
