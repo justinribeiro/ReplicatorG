@@ -68,6 +68,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.regex.Matcher;
@@ -405,8 +407,20 @@ ToolpathGenerator.GeneratorListener
 		splitPane.setPreferredSize(new Dimension(600,600));
 		pane.add(splitPane,"growx,growy,shrinkx,shrinky");
 		pack();
+
+		broker.publish("ReplicatorG startup", "/console");
+		broker.subscribe();
 		
-		broker.run("ReplicatorG startup");
+		// I want to see this spawn on a new thread
+//		final MqttCommunications passalong = broker;
+//		Runnable stff = new Runnable() {
+//			public void run() { 
+//				passalong.subscribe();
+//			}
+//		};
+//				
+//		ExecutorService exec = Executors.newSingleThreadExecutor();
+//		exec.submit(stff);
 
 		//		textarea.setTransferHandler(new TransferHandler() {
 		//			private static final long serialVersionUID = 2093323078348794384L;

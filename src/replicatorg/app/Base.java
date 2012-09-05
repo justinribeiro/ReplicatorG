@@ -988,7 +988,7 @@ public class Base {
 		if (notificationHandler == null) { 
 			notificationHandler = NotificationHandler.Factory.getHandler(null, false);
 		}
-		broker.run(message);
+		broker.publish(message, "/console");
 		notificationHandler.showMessage(title,message);
 	}
 
@@ -999,7 +999,7 @@ public class Base {
 		if (notificationHandler == null) { 
 			notificationHandler = NotificationHandler.Factory.getHandler(null, false);
 		}
-		broker.run(message);
+		broker.publish(message, "/console");
 		notificationHandler.showWarning(title, message, e);
 		
 		if (e != null)
@@ -1012,7 +1012,7 @@ public class Base {
 	 * ReplicatorG to continue running.
 	 */
 	static public void quitWithError(String title, String message, Throwable e) {
-
+		
 		notificationHandler.showError(title, message, e);
 		
 		if (e != null)

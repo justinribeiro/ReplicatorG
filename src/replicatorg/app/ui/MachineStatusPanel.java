@@ -4,11 +4,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Vector;
+import java.util.prefs.Preferences;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 
 import net.miginfocom.swing.MigLayout;
 import replicatorg.app.Base;
@@ -158,12 +164,13 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 			isBuilding = false;
 			break;
 		}
-		
-		String stat = text.concat(" - ").concat(machineText);
-		broker.run(stat);
+
+		broker.publish(text, "/state");
 		
 		updatePanel(bgColor, text, null, machineText);
 	}
+	
+	private String prepc = "";
 	
 	public void updateBuildStatus(MachineProgressEvent event) {
 		if (isBuilding) {
@@ -175,15 +182,25 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 			if (event.getTotalLines() == 0) {
 				remaining = 0;
 			}
+						
+			int getLines = event.getLines();
+			int totallines = event.getTotalLines();
+			String elapsed = EstimationDriver.getBuildTimeString(event.getElapsed(), true);
+			String remainingtime = EstimationDriver.getBuildTimeString(remaining, true);
 				
 			final String s = String.format(
 					"Commands: %1$7d / %2$7d  (%3$3.2f%%) | Elapsed: %4$s  |  Est. done in:  %5$s",
-					event.getLines(), event.getTotalLines(), 
-					percentComplete,
-					EstimationDriver.getBuildTimeString(event.getElapsed(), true),
-					EstimationDriver.getBuildTimeString(remaining, true));
+					getLines, totallines, percentComplete, elapsed,	remainingtime);
+
+			// The problem is, the broker doesn't care about the volume of messages
+			// but Firefox and Chrome sure do ;-)
+			if (!elapsed.equals(prepc)) {
+				System.out.println("Matched, queue it");
+				String message = new BuildStatus(getLines, totallines, percentComplete, elapsed, remainingtime).toJson();
+				broker.publish(message, "/build");
+				prepc = elapsed;
+			}
 			
-			broker.run(s);
 			smallLabel.setText(s);
 		}
 	}
@@ -210,9 +227,14 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 		
 		final MachineToolStatusEvent e = event;
 		SwingUtilities.invokeLater(new Runnable() {
+			
+			@SuppressWarnings("unchecked")
 			public void run() {
 				Vector<ToolModel> tools = e.getSource().getModel().getTools();
 				String tempString = "";
+				
+				@SuppressWarnings("rawtypes")
+				Collection all = new ArrayList();
 				
 				/// TRICKY: we assume that the MachineThread is calling these functions 
 				/// for us, at least once every few seconds, to keep the local temperaure cache up to date.
@@ -224,18 +246,70 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 				{
 					double temp= t.getCurrentTemperature();
 					tempString += String.format(" "+t.getName()+": %1$3.1f\u00B0C  ", temp);
+					
+					all.add(new ToolStatus(t.getName(), temp));
+					
 					if(t.hasHeatedPlatform())
 					{
 						double ptemp = t.getPlatformCurrentTemperature();
 						tempString += String.format("Platform: %1$3.1f\u00B0C", ptemp);
+						
+						all.add(new ToolStatus("Platform", ptemp));
 					}
 				}
-				
-				broker.run(tempString);
+								
+				String message = new Gson().toJson(all);
+				broker.publish(message, "/tools");
 				
 				tempLabel.setText(tempString);
 				
 			}
 		});
+	}
+}
+
+class BuildStatus {
+		
+	@SerializedName("completelines")
+	int completelines;
+	
+	@SerializedName("totallines")
+	int totallines;
+	 
+	@SerializedName("complete")
+	Double complete;
+	 
+	@SerializedName("elapsed")
+	String elapsed;
+	 
+	@SerializedName("remaining")
+	String remaining;
+	
+	public BuildStatus(int completelines, int totallines, Double complete, String elapsed, String remaining) {
+
+		this.completelines = completelines;
+		this.totallines = totallines;
+		this.complete = complete;
+		this.elapsed = elapsed;
+		this.remaining = remaining;
+	}
+	
+	public String toJson() {
+	    
+	    Gson myGson = new Gson();
+	    
+	    return myGson.toJson(this);
+	}
+	 
+}
+
+class ToolStatus {
+	private String tool;
+
+	private double temp;
+	
+	ToolStatus(String tool, double temp) {
+		this.tool = tool;
+		this.temp = temp;
 	}
 }

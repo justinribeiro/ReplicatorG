@@ -8,6 +8,7 @@ import org.w3c.dom.NodeList;
 
 import replicatorg.app.Base;
 import replicatorg.app.tools.XML;
+import replicatorg.app.ui.extras.mqttprefs.MqttCommunications;
 import replicatorg.drivers.Driver;
 import replicatorg.drivers.DriverError;
 import replicatorg.drivers.DriverFactory;
@@ -647,6 +648,10 @@ class MachineThread extends Thread {
 		MachineState oldState = this.state;
 		this.state = state;
 		if (!oldState.equals(state)) {
+			MqttCommunications broker = new MqttCommunications();
+			broker.publish(message, "/state");
+			broker.subscribe();
+			
 			controller.emitStateChange(state, message);
 		}
 	}

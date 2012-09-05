@@ -6,6 +6,9 @@ import javax.swing.JLabel;
 
 import org.eclipse.paho.client.mqttv3.*;
 
+import replicatorg.app.Base;
+import replicatorg.drivers.Driver;
+
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
@@ -15,39 +18,59 @@ public class MqttCommunications implements MqttCallback {
 	private static final String MQTT_NODE = "/com/replicatorg/extra/mqtt";
 	private static JLabel lblConnectionTest = null;
 	private static MqttClient client = null;
+	private static Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
 	
-	public void run(String stat) {
-		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
-		 
+	/**
+	 * Constructs an instance of the mqtt client communications
+	 * @return 
+	 * @throws MqttException
+	 */
+    public MqttCommunications() {
+
+    	try {
+    		// Construct the MqttClient instance
+    		client = new MqttClient(prefs.get("serveraddress", ""), prefs.get("publishprintername", ""));
+    		
+			// Set this wrapper as the callback handler
+	    	client.setCallback(this);
+	    	
+		} catch (MqttException e) {
+			System.err.println("Could not wire mqtt");
+		}
+    }
+	
+	/**
+	 * Publishes a message to the mqtt broker
+	 * @param data String The message you want to send
+	 * @param type String The type of message it is
+	 * @return 
+	 * @throws MqttException
+	 */
+	public void publish(String data, String sub) {
 		
 		if ((client != null) && client.isConnected()) { 
 			// Don't do anything
 		} else {
 			
 			try {
-				// Create a client to communicate with a broker at the specified address
-				client = new MqttClient(prefs.get("serveraddress", ""), prefs.get("publishprintername", ""));
-
 				// Connect to the broker
 				client.connect();
 
-				// Setup a callback
-				client.setCallback(this);
-
 			} catch (MqttException ex) {
+				
 				System.err.println("Could not connect");
+				
 			}
 			
 		}
 
 		if ((client != null) && client.isConnected()) {
-			MqttTopic topic = client.getTopic(prefs.get("servertopic", ""));
-			// Create message and set quality of service to deliver the message once
+			MqttTopic topic = client.getTopic(prefs.get("servertopic", "").concat(sub));
 			
-			String sendtobroker = new Payload(stat).toJson();
+			String sendtobroker = new Payload(data).toJson();
 						
 			MqttMessage message = new MqttMessage(sendtobroker.getBytes());
-			message.setQos(2);
+			message.setQos(0);
 	
 			try {
 				
@@ -66,6 +89,52 @@ public class MqttCommunications implements MqttCallback {
 		}
 	}
 	
+	/**
+	 * Subscribes to a topic on the mqtt broker
+	 * @return 
+	 * @throws MqttException
+	 */
+	public void subscribe() {
+		
+		if ((client != null) && client.isConnected()) { 
+			// Don't do anything
+		} else {
+			
+			try {
+				// Connect to the broker
+				client.connect();
+
+			} catch (MqttException ex) {
+				
+				System.err.println("Could not connect");
+				
+			}
+			
+		}
+
+    	// We're looking for something specific
+    	String topicSetter = prefs.get("servertopic", "").concat("/get");
+    	
+    	// Subscribe to the topic
+    	try {
+			client.subscribe(topicSetter, 2);
+			System.out.println("Subscribe complete");
+			
+		} catch (MqttSecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Tests the server configuration on the mqtt prefs window
+	 * @param label JLabel The label from the mqtt prefs window
+	 * @return 
+	 * @throws MqttException
+	 */
 	public void testConnection(JLabel label) {
 		lblConnectionTest = label;
 		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
@@ -119,18 +188,51 @@ public class MqttCommunications implements MqttCallback {
 	}
 
 	public void connectionLost(Throwable cause) {
-		// TODO: Implement reconnection logic
-		System.err.println("Connection lost");
-		lblConnectionTest.setText("Connection lost: check your server address.");
+
+		System.err.println("MQTT connection lost");
+		
+		if ((client != null) && client.isConnected()) { 
+			// Don't do anything
+		} else {
+			
+			try {
+			
+				client.connect();
+			
+			} catch (MqttSecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				
+			} catch (MqttException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			
+			}
+			
+		}
+		
+		
 	}
 
 	public void deliveryComplete(MqttDeliveryToken token) {
-		lblConnectionTest.setText("Connection Successful, delivery complete!");
-		System.out.println("Delivery complete");
+		
+		System.out.println("MQTT message delivery complete");
 	}
+	
 
 	public void messageArrived(MqttTopic topic, MqttMessage message) throws Exception {
+		// Called when a message arrives from the server.
+		
+		if (new String(message.getPayload()).equals("info")) {
+			this.publish(new BotInfo().toJson(), "/info");
+		}
+		
+		System.out.println("Time:\t" +System.currentTimeMillis() +
+                           "  Topic:\t" + topic.getName() + 
+                           "  Message:\t" + new String(message.getPayload()) +
+                           "  QoS:\t" + message.getQos());
 	}
+
 }
 
 
@@ -140,23 +242,55 @@ class Payload {
 	
 	@SerializedName("bot")
 	String bot;
+	 	 
+	@SerializedName("message")
+	String message;
+
+	
+	public Payload(String message) {
+		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
+		
+		this.bot = prefs.get("publishprintername", "");
+		this.message = message;
+	}
+	
+	public String toJson() {
+	    
+	    Gson myGson = new Gson();
+	    
+	    return myGson.toJson(this);
+	}
 	 
+}
+
+class BotInfo {
+	
+	private static final String MQTT_NODE = "/com/replicatorg/extra/mqtt";
+		 
 	@SerializedName("org")
 	String org;
 	 
 	@SerializedName("loc")
 	String loc;
 	 
-	@SerializedName("message")
-	String message;
+	@SerializedName("machine")
+	String machine;
 	
-	public Payload(String message) {
+	@SerializedName("driver")
+	String driver;
+	
+	@SerializedName("firmware")
+	String firmware;
+	
+	public BotInfo() {
 		Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
+		Driver driver = Base.getMachineLoader().getDriver();
 		
-		this.bot = prefs.get("publishprintername", "");
 		this.org = prefs.get("publishorganization", "");
 		this.loc = prefs.get("publishlocation", "");
-		this.message = message;
+		this.machine =  Base.getMachineLoader().getMachineInterface().getMachineName();
+		this.driver = Base.getMachineLoader().getDriver().getDriverName();
+		this.firmware = driver.getFirmwareInfo();
 	}
 	
 	public String toJson() {
