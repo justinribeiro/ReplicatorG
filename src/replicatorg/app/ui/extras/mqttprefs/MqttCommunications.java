@@ -184,6 +184,14 @@ public class MqttCommunications implements MqttCallback {
 				System.err.println("Failed to send message");
 				lblConnectionTest.setText("Connection failed: check your server address.");
 			}
+			
+			try {
+				client.disconnect();
+			} catch (MqttException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			lblConnectionTest.setText("Connection Succesful!");
 		}
 	}
 

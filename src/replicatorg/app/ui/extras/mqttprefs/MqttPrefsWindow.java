@@ -187,13 +187,13 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 		panel_1.add(fldOrganization, "cell 1 1,growx");
 		fldOrganization.setColumns(10);
 		
-		JLabel lblUrl = new JLabel("URL");
-		panel_1.add(lblUrl, "cell 0 2,alignx right");
-		
-		fldUrl = new JTextField();
-		fldUrl.setText(prefs.get("publishorgurl", ""));
-		panel_1.add(fldUrl, "cell 1 2,growx");
-		fldUrl.setColumns(10);
+//		JLabel lblUrl = new JLabel("URL");
+//		panel_1.add(lblUrl, "cell 0 2,alignx right");
+//		
+//		fldUrl = new JTextField();
+//		fldUrl.setText(prefs.get("publishorgurl", ""));
+//		panel_1.add(fldUrl, "cell 1 2,growx");
+//		fldUrl.setColumns(10);
 		
 		JLabel lblLocation = new JLabel("Location");
 		panel_1.add(lblLocation, "cell 0 3,alignx right");
@@ -203,17 +203,17 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 		panel_1.add(fldLocation, "cell 1 3,growx");
 		fldLocation.setColumns(10);
 		
-		JCheckBox chckbxStatus = new JCheckBox("Status");
-		panel_1.add(chckbxStatus, "cell 0 4");
-		
-		JCheckBox chckbxProgress = new JCheckBox("Progress");
-		panel_1.add(chckbxProgress, "flowx,cell 1 4");
-		
-		JCheckBox chckbxModelName = new JCheckBox("Model Name");
-		panel_1.add(chckbxModelName, "cell 1 4");
-		
-		JCheckBox chckbxMachineType = new JCheckBox("Machine Type");
-		panel_1.add(chckbxMachineType, "cell 1 4");
+//		JCheckBox chckbxStatus = new JCheckBox("Status");
+//		panel_1.add(chckbxStatus, "cell 0 4");
+//		
+//		JCheckBox chckbxProgress = new JCheckBox("Progress");
+//		panel_1.add(chckbxProgress, "flowx,cell 1 4");
+//		
+//		JCheckBox chckbxModelName = new JCheckBox("Model Name");
+//		panel_1.add(chckbxModelName, "cell 1 4");
+//		
+//		JCheckBox chckbxMachineType = new JCheckBox("Machine Type");
+//		panel_1.add(chckbxMachineType, "cell 1 4");
 		
 		JButton btnSave = new JButton("Save");
 		mainPanel.add(btnSave, "cell 1 7,alignx center");
@@ -239,37 +239,9 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 
 	protected void testConnection() {
 		
-		//Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
-		//MqttClient client = null;
-		
 		MqttCommunications clientTest = new MqttCommunications();
 		clientTest.testConnection(lblConnectionTest);
-		
-//		try {
-//			client = new MqttClient(fldAddress.getText(), fldPrinterName.getText());
-//			client.connect();
-//			
-//			String what = prefs.get("publishprintername", "");
-//			String who = prefs.get("publishorganization", "");
-//			String where = prefs.get("publishlocation", "");
-//			String topic = prefs.get("servertopic", "");
-//			
-//			String sendtobroker = what.concat("-").concat(who).concat("-").concat(where);
-//			
-//			MqttMessage message = new MqttMessage(sendtobroker.getBytes());
-//			message.setQos(0);
-//			client.getTopic(topic).publish(message);
-//			
-//			client.disconnect();
-//			lblConnectionTest.setText("Connection Successful!");
-//		} 
-//		catch (MqttSecurityException e1) {
-//			lblConnectionTest.setText("Connection failed: check your security credentials.");
-//		}
-//		catch (MqttException e2) {
-//
-//			lblConnectionTest.setText("Connection failed: check your server address.");
-//		}
+
 	}
 	
 	protected void saveMQTTprefs() {
@@ -286,7 +258,7 @@ public class MqttPrefsWindow extends JFrame implements ChangeListener, WindowLis
 		prefs.put("servertopic", fldTopic.getText());
 		prefs.put("publishprintername", fldPrinterName.getText());
 		prefs.put("publishorganization", fldOrganization.getText());
-		prefs.put("publishorgurl", fldUrl.getText());
+//		prefs.put("publishorgurl", fldUrl.getText());
 		prefs.put("publishlocation", fldLocation.getText());
 		
 	}
