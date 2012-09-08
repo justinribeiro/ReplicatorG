@@ -1,5 +1,6 @@
 package replicatorg.app.ui.extras.mqttprefs;
 
+import java.awt.Color;
 import java.util.prefs.Preferences;
 
 import javax.swing.JLabel;
@@ -8,10 +9,12 @@ import org.eclipse.paho.client.mqttv3.*;
 
 import replicatorg.app.Base;
 import replicatorg.drivers.Driver;
+import replicatorg.machine.Machine;
+import replicatorg.machine.MachineInterface;
+import replicatorg.machine.MachineState;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
 
 public class MqttCommunications implements MqttCallback {
 	
@@ -19,6 +22,9 @@ public class MqttCommunications implements MqttCallback {
 	private static JLabel lblConnectionTest = null;
 	private static MqttClient client = null;
 	private static Preferences prefs = Preferences.userRoot().node(MQTT_NODE);
+	
+	// Implement MachineInterface? Maybe later
+	private static String lastKnownState = null;
 	
 	/**
 	 * Constructs an instance of the mqtt client communications
@@ -229,18 +235,25 @@ public class MqttCommunications implements MqttCallback {
 	
 
 	public void messageArrived(MqttTopic topic, MqttMessage message) throws Exception {
-		// Called when a message arrives from the server.
 		
 		if (new String(message.getPayload()).equals("info")) {
 			this.publish(new BotInfo().toJson(), "/info");
 		}
 		
-		System.out.println("Time:\t" +System.currentTimeMillis() +
-                           "  Topic:\t" + topic.getName() + 
-                           "  Message:\t" + new String(message.getPayload()) +
-                           "  QoS:\t" + message.getQos());
+		if (new String(message.getPayload()).equals("state")) {
+			
+			if (lastKnownState == null) {
+				lastKnownState = "Can not determine machine state; possibly not running?";
+			} 	
+			
+			this.publish(lastKnownState, "/state");
+		}
+		
 	}
-
+	
+	public void setState(String text) {
+		lastKnownState = text;
+	}
 }
 
 

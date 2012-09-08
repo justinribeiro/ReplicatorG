@@ -57,7 +57,7 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 	static final private Color BG_READY = new Color(0x80, 0xff, 0x60);
 	static final private Color BG_BUILDING = new Color(0xff, 0xef, 0x00); // process yellow
 	
-	protected final MqttCommunications broker = new MqttCommunications();
+	//protected final MqttCommunications broker = Base.broker;
 	
 	MachineStatusPanel() {
 		Font statusFont = Base.getFontPref("status.font","SansSerif,plain,12");
@@ -164,8 +164,9 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 			isBuilding = false;
 			break;
 		}
-
-		broker.publish(text, "/state");
+		
+		Base.broker.setState(text);
+		Base.broker.publish(text, "/state");
 		
 		updatePanel(bgColor, text, null, machineText);
 	}
@@ -195,9 +196,8 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 			// The problem is, the broker doesn't care about the volume of messages
 			// but Firefox and Chrome sure do ;-)
 			if (!elapsed.equals(prepc)) {
-				System.out.println("Matched, queue it");
 				String message = new BuildStatus(getLines, totallines, percentComplete, elapsed, remainingtime).toJson();
-				broker.publish(message, "/build");
+				Base.broker.publish(message, "/build");
 				prepc = elapsed;
 			}
 			
@@ -259,7 +259,7 @@ public class MachineStatusPanel extends BGPanel implements MachineListener {
 				}
 								
 				String message = new Gson().toJson(all);
-				broker.publish(message, "/tools");
+				Base.broker.publish(message, "/tools");
 				
 				tempLabel.setText(tempString);
 				

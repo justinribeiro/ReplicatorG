@@ -132,7 +132,10 @@ public class Base {
 	public static FileHandler logFileHandler = null;
 	public static String logFilePath = null;
 	
-	protected final static MqttCommunications broker = new MqttCommunications();
+	/**
+	 * MQTT Broker communications
+	 */
+	public final static MqttCommunications broker = new MqttCommunications();
 	
     /*
      * expands ~ as per python os.path.expanduser

@@ -304,8 +304,6 @@ ToolpathGenerator.GeneratorListener
 	}
 
 	private MRUList mruList;
-	
-	protected final MqttCommunications broker = new MqttCommunications();
 
 	public MainWindow() {
 		super(WINDOW_TITLE);
@@ -408,8 +406,8 @@ ToolpathGenerator.GeneratorListener
 		pane.add(splitPane,"growx,growy,shrinkx,shrinky");
 		pack();
 
-		broker.publish("ReplicatorG startup", "/console");
-		broker.subscribe();
+		Base.broker.publish("ReplicatorG startup", "/console");
+		Base.broker.subscribe();
 		
 		// I want to see this spawn on a new thread
 //		final MqttCommunications passalong = broker;
