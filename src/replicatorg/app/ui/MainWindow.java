@@ -45,6 +45,8 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -667,7 +669,8 @@ ToolpathGenerator.GeneratorListener
 			spp.setStartCode(new MutableGCodeSource(machineLoader.getMachineInterface().getModel().getStartBookendCode()));
 			spp.setEndCode(new MutableGCodeSource(machineLoader.getMachineInterface().getModel().getEndBookendCode()));
 			spp.setMultiHead(isDualDriver());
-			if(machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR)
+			if ((machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR) ||
+			    (machineLoader.getDriver().getDriverName().equals("Makerbot4GSailfish")))
 				spp.setAddProgressUpdates(true);
 		}
 		else if (generator instanceof MiracleGrueGenerator) {
@@ -680,7 +683,8 @@ ToolpathGenerator.GeneratorListener
 			spp.setMultiHead(isDualDriver());
 			spp.setPrependStart(true);
 			spp.setAppendEnd(true);
-			if(machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR)
+			if ((machineLoader.getMachineInterface().getMachineType() == MachineType.THE_REPLICATOR) ||
+			    (machineLoader.getDriver().getDriverName().equals("Makerbot4GSailfish")))
 				spp.setAddProgressUpdates(true);
 
 		}
@@ -2190,6 +2194,9 @@ ToolpathGenerator.GeneratorListener
 		if(buildFlag == BuildFlag.NONE) {
 			return; //exit ro cancel clicked
 		}
+
+		machineLoader.getDriver().setBuildToFileVersion(0);
+
 		if(buildFlag == BuildFlag.GEN_AND_BUILD) {
 			//'rewrite' clicked
 			buildOnComplete = true;
@@ -2295,7 +2302,41 @@ ToolpathGenerator.GeneratorListener
 		public String getDescription() {
 			return description;
 		}
+
+		public String getFirstExtension() {
+			return extensions.getFirst();
+		}
 	};
+
+	private String getExtension(String s) {
+		String extension = null;
+		//System.out.println("getExtension: " + s);
+
+		int pos = s.lastIndexOf('.');
+		
+		if ( pos > 0 && pos < (s.length() - 1))
+			extension = s.substring(pos).toLowerCase();
+		
+		return extension;
+	}
+
+	private String getExtension(File f) {
+		return getExtension(f.getAbsolutePath());
+	}
+
+	private File fileReplaceExtension(File f, String extensionReplacement) {
+		String s = f.getName();
+		String trimmed = s;
+
+		int pos = s.lastIndexOf('.');
+		
+		if ( pos > 0 && pos < (s.length() - 1))
+			trimmed = s.substring(0, pos);
+
+		trimmed = trimmed + extensionReplacement;
+
+		return new File(f.getParent(), trimmed);
+	}
 
 	private String selectOutputFile(String defaultName) {
 		File directory = null;
@@ -2303,7 +2344,8 @@ ToolpathGenerator.GeneratorListener
 		if (loadDir != null) {
 			directory = new File(loadDir);
 		}
-		JFileChooser fc;
+
+		final JFileChooser fc;
 		if (directory != null) {
 			fc = new JFileChooser(directory);
 		}
@@ -2311,11 +2353,43 @@ ToolpathGenerator.GeneratorListener
 			fc = new JFileChooser();
 		}
 
-		fc.setFileFilter(new ExtensionFilter(".s3g","Makerbot build file"));
+		ExtensionFilter s3gFilter = new ExtensionFilter(".s3g","Makerbot build file (s3g)");
+//		ExtensionFilter j4gFilter = new ExtensionFilter(".j4g","Sailfish build file (j4g)");
+		fc.addChoosableFileFilter(s3gFilter);
+//		fc.addChoosableFileFilter(j4gFilter);
+
+		fc.setAcceptAllFileFilterUsed(false);
+
 		fc.setDialogTitle("Save Makerbot build as...");
 		fc.setDialogType(JFileChooser.SAVE_DIALOG);
 		fc.setFileHidingEnabled(false);
 		fc.setSelectedFile(new File(directory,defaultName));
+
+		//Add property listener so we can change the file "Save As" name when
+		//we change the file format.  It's a workaround for a bug in JFileChooser
+		fc.addPropertyChangeListener(new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent e) {
+				if(e.getPropertyName().equals(JFileChooser.SELECTED_FILE_CHANGED_PROPERTY)) {
+					//System.out.println("Event1: " + e);
+					//System.out.println("Event1Old: " + e.getOldValue());
+
+					//If Changing filter type has nuked out "Save As" file
+					//change it to the new file type and reset it
+					if ( e.getNewValue() == null && e.getOldValue() != null ) {
+						String replacementExtension = ((ExtensionFilter)fc.getFileFilter()).getFirstExtension();
+						File newFilename = fileReplaceExtension((File)e.getOldValue(), replacementExtension);
+						//System.out.println("New Filename: " + newFilename);
+
+						fc.setSelectedFile(newFilename);
+					}
+				}
+			}
+		});
+
+		//Select the correct format for the current file extension
+		if ( getExtension(fc.getSelectedFile()).equals(".s3g"))	fc.setFileFilter(s3gFilter);
+//		if ( getExtension(fc.getSelectedFile()).equals(".j4g"))	fc.setFileFilter(j4gFilter);
+
 		int rv = fc.showSaveDialog(this);
 		if (rv == JFileChooser.APPROVE_OPTION) {
 			fc.getSelectedFile().getName();
@@ -2343,15 +2417,47 @@ ToolpathGenerator.GeneratorListener
 			return;
 		}
 
-    String sourceName;
-    if(machineLoader.getDriver() instanceof OnboardParameters && ((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration() &&
-        ((OnboardParameters)machineLoader.getDriver()).hasAdvancedFeatures()){
-		  sourceName = build.getName() + ".s4g";
-    } else {
-      sourceName = build.getName() + ".s3g";
-    }
+		String formatExtension;
+//		final String sXgVersion_pref = "replicatorg.last.choosen.sxg.format";
+//
+//		//Figure out the default (s3g or j4g) we should be using for the save dialog box
+//		if ( machineLoader.getDriver() instanceof OnboardParameters && machineLoader.getDriver().isInitialized() ) {
+//			//Machine connected
+//			//System.out.println("Machine connected");
+//
+//			//If it hasJettyAcceleration and hasAdvancedFeatures then it's likely MightyBoardFirmware >=6.1	and j4g
+//			//if (((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration() && ((OnboardParameters)machineLoader.getDriver()).hasAdvancedFeatures())
+//			if (((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration())
+//				formatExtension = "j4g";
+//
+//			//If it's Sailfish running on a ToM, then we're j4g
+//			else if ( machineLoader.getDriver().getDriverName().equals("Makerbot4GSailfish") )
+//				formatExtension = "j4g";
+//
+//			//Everything else is likely old, use s3g
+//			else	formatExtension = "s3g";
+//		} else {
+//			//Machine NOT connected
+//			//System.out.println("Machine NOT connected");
+//
+//			//Use the last thing we selected
+//			if ( Base.preferences.getInt(sXgVersion_pref, 3) == 4 )
+//				formatExtension = "j4g";
+//			else	formatExtension = "s3g";
+//		}
+		formatExtension = "s3g";
+
+		String sourceName = build.getName() + "." + formatExtension;
+		//System.out.println("SourceName: " + sourceName);
+
 		String path = selectOutputFile(sourceName);
 		if (path != null) {
+
+//			//Save the preference for what the user chose for format
+//			if	( getExtension(path).equals(".j4g") )	Base.preferences.putInt(sXgVersion_pref, 4);
+//			else if ( getExtension(path).equals(".s3g") )	Base.preferences.putInt(sXgVersion_pref, 3);
+//			else 						Base.preferences.putInt(sXgVersion_pref, 3);
+
 			// build specific stuff
 			building = true;
 			//buttons.activate(MainButtonPanel.BUILD);
@@ -2360,6 +2466,7 @@ ToolpathGenerator.GeneratorListener
 
 			// start our building thread.
 			buildStart = new Date();
+			machineLoader.getDriver().setBuildToFileVersion((getExtension(path).equals(".j4g")) ? 4 : 3);
 			machineLoader.getMachineInterface().buildToFile(new JEditTextAreaSource(textarea), path);
 		}
 	}
