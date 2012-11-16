@@ -194,7 +194,7 @@
 			 target.eepromStoreToolDelta(1, ((Number)yToolheadOffsetField.getValue()).doubleValue());
 			 target.eepromStoreToolDelta(2, ((Number)zToolheadOffsetField.getValue()).doubleValue());
 		 }
-
+    
 		 // Set acceleration related parameters
 		 accelUI.setEEPROMFromUI();
 
@@ -352,7 +352,7 @@
 		else
 			isSailfish = false;
 
-                setLayout(new MigLayout("fill", "[r][l][r]"));
+    setLayout(new MigLayout("fill", "[r][l][r]"));
 
 		add(new JLabel("Machine Name (max. "+Integer.toString(MAX_NAME_LENGTH)+" chars)"));
 		machineNameField.setColumns(MAX_NAME_LENGTH);
@@ -380,7 +380,7 @@
   			endstopsTab.add(toolCountField, "span 2, wrap");
   		}
 		if(target.hasHbp()){
-			endstopsTab.add(new JLabel("HBP on/off"));
+			endstopsTab.add(new JLabel("HBP present"));
 			endstopsTab.add(hbpToggleBox,"span 2, wrap");
 		}
 
@@ -882,20 +882,14 @@
 		 // Accel Parameters of Tab 2
 		 class AccelParamsTab2 {
 			 boolean slowdownEnabled;
-			 boolean overrideGCodeTempEnabled;
-			 boolean preheatDuringPauseEnabled;
 			 int[] deprime;
 			 double[] JKNadvance;
 
 			 AccelParamsTab2(boolean slowdownEnabled,
-					 boolean overrideGCodeTempEnabled,
-					 boolean preheatDuringPauseEnabled,
 					 int[] deprime,
 					 double[] JKNadvance)
 			 {
 				 this.slowdownEnabled           = slowdownEnabled;
-				 this.overrideGCodeTempEnabled  = overrideGCodeTempEnabled;
-				 this.preheatDuringPauseEnabled = preheatDuringPauseEnabled;
 				 this.deprime                   = deprime;
 				 this.JKNadvance                = JKNadvance;
 			 }
@@ -1037,18 +1031,6 @@
            "or a travel-only move is encountered.  Set to a value of 0 to disable this feature for this extruder.  " +
            "Do not use with Skeinforge's Reversal plugin nor Skeinforge's Dimension plugin's \"Retraction Distance\".");
 
-		 private JCheckBox overrideGCodeTempBox = new JCheckBox();
-		 {
-			 overrideGCodeTempBox.setToolTipText(wrap2HTML(width,
-                    "When enabled, override the gcode temperature settings using the preheat " +
-		    "temperature settings for the extruders and build platform."));
-		 }
-           
-		 private JCheckBox preheatDuringPauseBox = new JCheckBox();
-		 {
-			 preheatDuringPauseBox.setToolTipText(wrap2HTML(width,
-                    "When enabled, leave the extruder and platform heaters enabled whilst paused."));
-		 }
            
 		 // Slowdown is a flag for the Replicator
 		 private JCheckBox slowdownFlagBox = new JCheckBox();
@@ -1099,8 +1081,6 @@
 									       ((Number)aAxisMaxSpeedChange.getValue()).intValue(),
 									       ((Number)bAxisMaxSpeedChange.getValue()).intValue()}),
 						new AccelParamsTab2(slowdownFlagBox.isSelected(),
-								    overrideGCodeTempBox.isSelected(),
-								    preheatDuringPauseBox.isSelected(),
 								    new int[] {((Number)extruderDeprimeA.getValue()).intValue(),
 									       ((Number)extruderDeprimeB.getValue()).intValue()},
 								    new double[] {((Number)JKNAdvance1.getValue()).doubleValue(),
@@ -1114,8 +1094,6 @@
 
 		 private void setEEPROMFromUI(AccelParams params) {
 			 target.setAccelerationStatus(params.tab1.accelerationEnabled ? (byte)1 : (byte)0);
-			 target.setEEPROMParam(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP, params.tab2.overrideGCodeTempEnabled ? 1 : 0);
-			 target.setEEPROMParam(OnboardParameters.EEPROMParams.PREHEAT_DURING_PAUSE, params.tab2.preheatDuringPauseEnabled ? 1 : 0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG, params.tab2.slowdownEnabled ? 1 : 0);
 
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.ACCEL_MAX_EXTRUDER_NORM,    params.tab1.accelerations[0]);
@@ -1149,8 +1127,6 @@
 			 setUIFields(UI_TAB_1,
 				     params.accelerationEnabled,
 				     false,
-				     false,
-				     false,
 				     params.accelerations,
 				     params.maxAccelerations,
 				     params.maxSpeedChanges,
@@ -1161,8 +1137,6 @@
 		 private void setUIFields(int tabs,
 					  boolean accelerationEnabled,
 					  boolean slowdownEnabled,
-					  boolean overrideGCodeTempEnabled,
-					  boolean preheatDuringPauseEnabled,
 					  int[] accelerations,
 					  int[] maxAccelerations,
 					  int[] maxSpeedChanges,
@@ -1196,8 +1170,6 @@
 
 			 if ((tabs & UI_TAB_2) != 0) {
 				 slowdownFlagBox.setSelected(slowdownEnabled);
-				 overrideGCodeTempBox.setSelected(overrideGCodeTempEnabled);
-				 preheatDuringPauseBox.setSelected(preheatDuringPauseEnabled);
 
 				 if (JKNadvance != null) {
 					 JKNAdvance1.setValue(JKNadvance[0]);
@@ -1218,8 +1190,6 @@
 		 public void setUIFromEEPROM() {
 			 boolean accelerationEnabled = target.getAccelerationStatus() != 0;
 			 boolean slowdownEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG) != 0;
-			 boolean overrideGCodeTempEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP) != 0;
-			 boolean preheatDuringPauseEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.PREHEAT_DURING_PAUSE) != 0;
 			 int[] maxAccelerations = new int[] {
 				 target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_MAX_ACCELERATION_X),
 				 target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_MAX_ACCELERATION_Y),
@@ -1246,8 +1216,8 @@
 				 target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_EXTRUDER_DEPRIME_A),
 				 target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_EXTRUDER_DEPRIME_B) };
 		 
-			 setUIFields(UI_TAB_1 | UI_TAB_2, accelerationEnabled, slowdownEnabled, overrideGCodeTempEnabled,
-				     preheatDuringPauseEnabled, accelerations, maxAccelerations, maxSpeedChanges,
+			 setUIFields(UI_TAB_1 | UI_TAB_2, accelerationEnabled, slowdownEnabled, 
+				     accelerations, maxAccelerations, maxSpeedChanges,
 				     JKNadvance, deprime);
 		 }
 
@@ -1323,8 +1293,6 @@
 			 extruderDeprimeA.setColumns(8);
 			 extruderDeprimeB.setColumns(8);
 
-			 addWithSharedToolTips(accelerationMiscTab, "Override the target temperatures in the gcode", overrideGCodeTempBox, "wrap");
-			 addWithSharedToolTips(accelerationMiscTab, "Preheat during paused operations", preheatDuringPauseBox, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "Slow printing when acceleration planing falls behind", slowdownFlagBox, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "JKN Advance K", JKNAdvance1, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "JKN Advance K2", JKNAdvance2, "wrap");
@@ -2075,6 +2043,7 @@
 
 			 boolean overrideGCodeTempEnabled;
 			 boolean dittoEnabled;
+       boolean extruderHold;
 			 int buzzerRepeats;
 			 int lcdType;
 			 int scriptId;
@@ -2083,6 +2052,7 @@
 
 			 AccelParamsTab3(boolean overrideGCodeTempEnabled,
 					 boolean dittoEnabled,
+           boolean extruderHold,
 					 int buzzerRepeats,
 					 int lcdType,
 					 int scriptId,
@@ -2091,6 +2061,7 @@
 			 {
 				 this.overrideGCodeTempEnabled = overrideGCodeTempEnabled;
 				 this.dittoEnabled             = dittoEnabled;
+         this.extruderHold             = extruderHold;
 				 this.buzzerRepeats            = buzzerRepeats;
 				 this.lcdType                  = lcdType;
 				 this.scriptId                 = scriptId;
@@ -2198,6 +2169,15 @@
            "left extruder and the other with the right extruder.  The object must be such that the print heads will not " +
 	   "interfere with one another; the firmware will not automatically guard against that."));
 		 }
+
+      private JCheckBox extruderHoldBox = new JCheckBox();
+       {
+           extruderHoldBox.setToolTipText(wrap2HTML(width,
+         "Check this box if using a 3mm filament extruder.  Using extruder hold causes the extruder stepper motors " +
+         "to remain engaged throughout the entire build regardless of whether or not the gcode requests that they " +
+         "be disabled via M103 commands.  When 3mm filament extruder stepper motors are disabled, the filament has " +
+     "a tendency to back out a tiny amount owing to the high pressure within the melt chamber of a 3mm extruder."));
+       } 
 
 		 private JButton draftButton = new JButton("Quick Draft");
 		 {
@@ -2420,6 +2400,7 @@
 										  ((Number)JKNAdvance2.getValue()).doubleValue()}),
 						new AccelParamsTab3(overrideGCodeTempBox.isSelected(),
 								    dittoBox.isSelected(),
+                    extruderHoldBox.isSelected(),
 								    ((Number)buzzerRepeats.getValue()).intValue(),
 								    lcdType,
 								    scriptId,
@@ -2438,7 +2419,7 @@
 
 			 target.setAccelerationStatus(params.tab1.accelerationEnabled ? (byte)1 : (byte)0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.DITTO_PRINT_ENABLED, params.tab3.dittoEnabled ? 1 : 0);
-
+			 target.setEEPROMParam(OnboardParameters.EEPROMParams.EXTRUDER_HOLD, params.tab3.extruderHold ? 1 : 0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP, params.tab3.overrideGCodeTempEnabled ? 1 : 0);
 
 			 int lv = params.tab2.slowdownEnabled ? 1 : 0;
@@ -2534,6 +2515,7 @@
 			 if (tab3 != null) {
 				 overrideGCodeTempBox.setSelected(tab3.overrideGCodeTempEnabled);
 				 dittoBox.setSelected(tab3.dittoEnabled);
+         extruderHoldBox.setSelected(tab3.extruderHold);
 				 buzzerRepeats.setValue(tab3.buzzerRepeats);
 				 int lcdIndex;
 				 if (tab3.lcdType == 50)
@@ -2567,6 +2549,7 @@
 			 boolean slowdownEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG) != 0;
 			 boolean overrideGCodeTempEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP) != 0;
 			 boolean dittoEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.DITTO_PRINT_ENABLED) != 0;
+       boolean extruderHold = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.EXTRUDER_HOLD) != 0;
 			 int buzzerRepeats = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.BUZZER_REPEATS);
 			 int scriptId = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.MOOD_LIGHT_SCRIPT);
 			 int lcdType = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.LCD_TYPE);
@@ -2616,6 +2599,7 @@
 							 JKNadvance),
 				     new AccelParamsTab3(overrideGCodeTempEnabled,
 							 dittoEnabled,
+               extruderHold,
 							 buzzerRepeats,
 							 lcdType,
 							 scriptId,
@@ -2722,6 +2706,7 @@
 			 addWithSharedToolTips(miscTab, "Platform preheat & override temperature (C)",
 					       platformTemp);
 			 addWithSharedToolTips(miscTab, "Ditto (duplicate) printing enabled", dittoBox, "wrap");
+       addWithSharedToolTips(miscTab, "Extruder hold enabled", extruderHoldBox, "wrap");
 
 			 addWithSharedToolTips(miscTab, "Mood light color",
 					       moodLightCustomColor, "span 4, wrap, gapbottom push, gapright push");
