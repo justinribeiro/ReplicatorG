@@ -28,7 +28,7 @@ The default 'Activate Altshell' checkbox is off, enable it if you would like an 
 
 ===Use M320/M321 Commands===
 
-Use M320/M321 to enable  / disable acceleration if checked.
+Use M320/M321 to enable / disable acceleration if checked.
 When unchecked, uses Open/Close Valve (M126/M127).
 For Makerbot and Sailfish firmwares, use M320/M321.  For the Jetty Firmware (v3.5 and earlier), do not use M320/M321.
 """
@@ -122,10 +122,10 @@ class AltshellSkein:
 
 		firstWord = splitLine[ 0 ]
 
-		if line == '(<edge> outer )' or line == '(<edge> inner )':
+		if line == '(<perimeter> outer )' or line == '(<perimeter> inner )':
 			self.state = 1
 	
-		elif firstWord == '(</edge>)':
+		elif firstWord == '(</perimeter>)':
 			if self.state == 3:
 				# Open valve command
 				if self.repository.useM320M321.value:
