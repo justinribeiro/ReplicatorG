@@ -2043,7 +2043,7 @@
 
 			 boolean overrideGCodeTempEnabled;
 			 boolean dittoEnabled;
-       boolean extruderHold;
+			 boolean extruderHold;
 			 int buzzerRepeats;
 			 int lcdType;
 			 int scriptId;
@@ -2052,7 +2052,7 @@
 
 			 AccelParamsTab3(boolean overrideGCodeTempEnabled,
 					 boolean dittoEnabled,
-           boolean extruderHold,
+					 boolean extruderHold,
 					 int buzzerRepeats,
 					 int lcdType,
 					 int scriptId,
@@ -2061,7 +2061,7 @@
 			 {
 				 this.overrideGCodeTempEnabled = overrideGCodeTempEnabled;
 				 this.dittoEnabled             = dittoEnabled;
-         this.extruderHold             = extruderHold;
+				 this.extruderHold             = extruderHold;
 				 this.buzzerRepeats            = buzzerRepeats;
 				 this.lcdType                  = lcdType;
 				 this.scriptId                 = scriptId;
@@ -2170,14 +2170,14 @@
 	   "interfere with one another; the firmware will not automatically guard against that."));
 		 }
 
-      private JCheckBox extruderHoldBox = new JCheckBox();
-       {
-           extruderHoldBox.setToolTipText(wrap2HTML(width,
-         "Check this box if using a 3mm filament extruder.  Using extruder hold causes the extruder stepper motors " +
-         "to remain engaged throughout the entire build regardless of whether or not the gcode requests that they " +
-         "be disabled via M103 commands.  When 3mm filament extruder stepper motors are disabled, the filament has " +
-     "a tendency to back out a tiny amount owing to the high pressure within the melt chamber of a 3mm extruder."));
-       } 
+		 private JCheckBox extruderHoldBox = new JCheckBox();
+		 {
+			 extruderHoldBox.setToolTipText(wrap2HTML(width,
+           "Check this box if using a 3mm filament extruder.  Using extruder hold causes the extruder stepper motors " +
+           "to remain engaged throughout the entire build regardless of whether or not the gcode requests that they " +
+           "be disabled via M103 commands.  When 3mm filament extruder stepper motors are disabled, the filament has " +
+	   "a tendency to back out a tiny amount owing to the high pressure within the melt chamber of a 3mm extruder."));
+		 }
 
 		 private JButton draftButton = new JButton("Quick Draft");
 		 {
@@ -2400,7 +2400,7 @@
 										  ((Number)JKNAdvance2.getValue()).doubleValue()}),
 						new AccelParamsTab3(overrideGCodeTempBox.isSelected(),
 								    dittoBox.isSelected(),
-                    extruderHoldBox.isSelected(),
+								    extruderHoldBox.isSelected(),
 								    ((Number)buzzerRepeats.getValue()).intValue(),
 								    lcdType,
 								    scriptId,
@@ -2515,7 +2515,7 @@
 			 if (tab3 != null) {
 				 overrideGCodeTempBox.setSelected(tab3.overrideGCodeTempEnabled);
 				 dittoBox.setSelected(tab3.dittoEnabled);
-         extruderHoldBox.setSelected(tab3.extruderHold);
+				 extruderHoldBox.setSelected(tab3.extruderHold);
 				 buzzerRepeats.setValue(tab3.buzzerRepeats);
 				 int lcdIndex;
 				 if (tab3.lcdType == 50)
@@ -2549,7 +2549,7 @@
 			 boolean slowdownEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG) != 0;
 			 boolean overrideGCodeTempEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP) != 0;
 			 boolean dittoEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.DITTO_PRINT_ENABLED) != 0;
-       boolean extruderHold = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.EXTRUDER_HOLD) != 0;
+			 boolean extruderHold = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.EXTRUDER_HOLD) != 0;
 			 int buzzerRepeats = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.BUZZER_REPEATS);
 			 int scriptId = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.MOOD_LIGHT_SCRIPT);
 			 int lcdType = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.LCD_TYPE);
@@ -2599,7 +2599,7 @@
 							 JKNadvance),
 				     new AccelParamsTab3(overrideGCodeTempEnabled,
 							 dittoEnabled,
-               extruderHold,
+							 extruderHold,
 							 buzzerRepeats,
 							 lcdType,
 							 scriptId,
@@ -2701,12 +2701,14 @@
 			 addWithSharedToolTips(miscTab, "Buzzer repeats", buzzerRepeats, "wrap");
 
 			 addWithSharedToolTips(miscTab, "Left extruder (tool 1) preheat & override temperature (C)", tool1Temp);
-			 addWithSharedToolTips(miscTab, "Mood light script", moodLightScript, "wrap");
+			 addWithSharedToolTips(miscTab, "Ditto (duplicate) printing enabled", dittoBox, "wrap");
 
 			 addWithSharedToolTips(miscTab, "Platform preheat & override temperature (C)",
 					       platformTemp);
-			 addWithSharedToolTips(miscTab, "Ditto (duplicate) printing enabled", dittoBox, "wrap");
+			 addWithSharedToolTips(miscTab, "Extruder hold enabled", extruderHoldBox, "wrap");
        addWithSharedToolTips(miscTab, "Extruder hold enabled", extruderHoldBox, "wrap");
+
+			 addWithSharedToolTips(miscTab, "Mood light script", moodLightScript, "wrap");
 
 			 addWithSharedToolTips(miscTab, "Mood light color",
 					       moodLightCustomColor, "span 4, wrap, gapbottom push, gapright push");

@@ -60,6 +60,7 @@ public interface OnboardParameters {
 		EXTRUDE_DURATION,           //
 		EXTRUDER_HOLD,		    //
 		EXTRUDE_MMS,                //
+		EXTRUDER_HOLD,              //
 		FILAMENT_USED,              // Lifetime filament used (steps)
 		FILAMENT_USED_TRIP,         // Filament used since trip counter last reset (steps)
 		HOMING_FEED_RATE_X,         //
