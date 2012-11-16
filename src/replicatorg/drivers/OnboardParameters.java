@@ -58,7 +58,6 @@ public interface OnboardParameters {
 		ENDSTOP_INVERSION,          //
 		ESTOP_CONFIGURATION,        //
 		EXTRUDE_DURATION,           //
-		EXTRUDER_HOLD,		    //
 		EXTRUDE_MMS,                //
 		EXTRUDER_HOLD,              //
 		FILAMENT_USED,              // Lifetime filament used (steps)
