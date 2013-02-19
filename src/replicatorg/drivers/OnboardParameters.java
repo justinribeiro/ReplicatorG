@@ -323,3 +323,4 @@ public interface OnboardParameters {
 	/// Returns true if the driver has the advanced reporting feature set
 	boolean hasAdvancedFeatures();
 }
+

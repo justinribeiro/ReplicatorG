@@ -1364,12 +1364,16 @@
 			 double[] JKNadvance;
 
 			 AccelParamsTab2(boolean slowdownEnabled,
+					 boolean overrideGCodeTempEnabled,
+					 boolean preheatDuringPauseEnabled,
 					 boolean extruderHold,
 					 boolean newToolheadOffsetSystem,
 					 int[] deprime,
 					 double[] JKNadvance)
 			 {
 				 this.slowdownEnabled           = slowdownEnabled;
+				 this.overrideGCodeTempEnabled  = overrideGCodeTempEnabled;
+				 this.preheatDuringPauseEnabled = preheatDuringPauseEnabled;
 				 this.extruderHold              = extruderHold;
 				 this.newToolheadOffsetSystem   = newToolheadOffsetSystem;
 				 this.deprime                   = deprime;
@@ -1533,6 +1537,12 @@
            "or a travel-only move is encountered.  Set to a value of 0 to disable this feature for this extruder.  " +
            "Do not use with Skeinforge's Reversal plugin nor Skeinforge's Dimension plugin's \"Retraction Distance\".");
 
+		 private JCheckBox overrideGCodeTempBox = new JCheckBox();
+		 {
+			 overrideGCodeTempBox.setToolTipText(wrap2HTML(width,
+                    "When enabled, override the gcode temperature settings using the preheat " +
+		    "temperature settings for the extruders and build platform."));
+		 }
            
 		 private JCheckBox preheatDuringPauseBox = new JCheckBox();
 		 {
@@ -1589,6 +1599,8 @@
 									       ((Number)aAxisMaxSpeedChange.getValue()).intValue(),
 									       ((Number)bAxisMaxSpeedChange.getValue()).intValue()}),
 						new AccelParamsTab2(slowdownFlagBox.isSelected(),
+								    overrideGCodeTempBox.isSelected(),
+								    preheatDuringPauseBox.isSelected(),
 								    extruderHoldBox.isSelected(),
 								    newToolheadOffsetSystemBox.isSelected(),
 								    new int[] {((Number)extruderDeprimeA.getValue()).intValue(),
@@ -1604,6 +1616,8 @@
 
 		 private void setEEPROMFromUI(AccelParams params) {
 			 target.setAccelerationStatus(params.tab1.accelerationEnabled ? (byte)1 : (byte)0);
+			 target.setEEPROMParam(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP, params.tab2.overrideGCodeTempEnabled ? 1 : 0);
+			 target.setEEPROMParam(OnboardParameters.EEPROMParams.PREHEAT_DURING_PAUSE, params.tab2.preheatDuringPauseEnabled ? 1 : 0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG, params.tab2.slowdownEnabled ? 1 : 0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.EXTRUDER_HOLD, params.tab2.extruderHold ? 1 : 0);
 			 target.setEEPROMParam(OnboardParameters.EEPROMParams.TOOLHEAD_OFFSET_SYSTEM, params.tab2.newToolheadOffsetSystem ? 1 : 0);
@@ -1641,6 +1655,8 @@
 				     false,
 				     false,
 				     false,
+				     false,
+				     false,
 				     params.accelerations,
 				     params.maxAccelerations,
 				     params.maxSpeedChanges,
@@ -1651,6 +1667,8 @@
 		 private void setUIFields(int tabs,
 					  boolean accelerationEnabled,
 					  boolean slowdownEnabled,
+					  boolean overrideGCodeTempEnabled,
+					  boolean preheatDuringPauseEnabled,
 					  boolean extruderHoldEnabled,
 					  boolean newToolheadOffsetSystem,
 					  int[] accelerations,
@@ -1686,6 +1704,8 @@
 
 			 if ((tabs & UI_TAB_2) != 0) {
 				 slowdownFlagBox.setSelected(slowdownEnabled);
+				 overrideGCodeTempBox.setSelected(overrideGCodeTempEnabled);
+				 preheatDuringPauseBox.setSelected(preheatDuringPauseEnabled);
 				 extruderHoldBox.setSelected(extruderHoldEnabled);
 				 newToolheadOffsetSystemBox.setSelected(newToolheadOffsetSystem);
 
@@ -1708,6 +1728,8 @@
 		 public void setUIFromEEPROM() {
 			 boolean accelerationEnabled = target.getAccelerationStatus() != 0;
 			 boolean slowdownEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.ACCEL_SLOWDOWN_FLAG) != 0;
+			 boolean overrideGCodeTempEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.OVERRIDE_GCODE_TEMP) != 0;
+			 boolean preheatDuringPauseEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.PREHEAT_DURING_PAUSE) != 0;
 			 boolean extruderHoldEnabled = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.EXTRUDER_HOLD) != 0;
 			 boolean newToolheadOffsetSystem = target.getEEPROMParamInt(OnboardParameters.EEPROMParams.TOOLHEAD_OFFSET_SYSTEM) != 0;
 			 int[] maxAccelerations = new int[] {
@@ -1813,6 +1835,8 @@
 			 extruderDeprimeA.setColumns(8);
 			 extruderDeprimeB.setColumns(8);
 
+			 addWithSharedToolTips(accelerationMiscTab, "Override the target temperatures in the gcode", overrideGCodeTempBox, "wrap");
+			 addWithSharedToolTips(accelerationMiscTab, "Preheat during paused operations", preheatDuringPauseBox, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "Slow printing when acceleration planing falls behind", slowdownFlagBox, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "Extruder hold enabled", extruderHoldBox, "wrap");
 			 addWithSharedToolTips(accelerationMiscTab, "Use the new dualstrustion toolhead offset system", newToolheadOffsetSystemBox, "wrap");
@@ -3285,3 +3309,4 @@
 		 }
 	 }
  }
+
