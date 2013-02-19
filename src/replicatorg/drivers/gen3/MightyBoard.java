@@ -542,7 +542,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		boolean needsReset = false;
 		int stepperCountMightyBoard = 5;
 		for(int i = 0; i < stepperCountMightyBoard; i++) {
-			int firmwareAxisLength = read32FromEEPROM(MightyBoard6X2EEPROM.AXIS_LENGTHS_MM + i*4);
+			int firmwareAxisLength = read32FromEEPROM(MightyBoard6X2EEPROM.AXIS_LENGTHS + i*4);
 			int val = 0;
 
 			switch (i) {
@@ -567,7 +567,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 			if ( firmwareAxisLength != val ) {
 				Base.logger.info("Bot Length Axis " + i + ": " + firmwareAxisLength + 
 						 " machine xml has: " + val + ", updating bot");
-				write32ToEEPROM32(MightyBoard6X2EEPROM.AXIS_LENGTHS_MM + i*4, val);
+				write32ToEEPROM32(MightyBoard6X2EEPROM.AXIS_LENGTHS + i*4, val);
 				needsReset = true;
 			}
 		}
@@ -952,7 +952,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
   
     double val;
 
-    if(!hasJettyAcceleration()){
+    if(true || hasJettyAcceleration()){
       
 		  val = read32FromEEPROM(MightyBoard5XEEPROM.AXIS_HOME_POSITIONS + axis*4);
       Point5d stepsPerMM = getMachine().getStepsPerMM();
@@ -991,7 +991,7 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		
 		int offsetSteps = (int)offset;
 
-    if(!hasJettyAcceleration()){
+    if(true || hasJettyAcceleration()){
       Point5d stepsPerMM = getMachine().getStepsPerMM();
       switch(axis) {
         case 0:
@@ -1036,20 +1036,20 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 
 		double val = read32FromEEPROM(MightyBoard5XEEPROM.TOOLHEAD_OFFSET_SETTINGS + axis*4);
 
-    if(hasJettyAcceleration()){
+    if(false && hasJettyAcceleration()){
       val = val / 1000.0;
-    }else if (hasAdvancedFeatures()){
+    }else if (hasJettyAcceleration() || hasAdvancedFeatures()){
 
       Point5d stepsPerMM = getMachine().getStepsPerMM();
       switch(axis) {
         case 0:
-          val = (val)/stepsPerMM.x()/10.0;
+          val = (val)/stepsPerMM.x();
           break;
         case 1:
-          val = (val)/stepsPerMM.y()/10.0;
+          val = (val)/stepsPerMM.y();
           break;
         case 2:
-          val = (val)/stepsPerMM.z()/10.0;
+          val = (val)/stepsPerMM.z();
           break;
       }
       
@@ -1110,20 +1110,20 @@ public class MightyBoard extends Makerbot4GAlternateDriver
 		
 		int offsetSteps = 0;
 
-	  if(hasJettyAcceleration()){
+	  if(false && hasJettyAcceleration()){
       offsetSteps = (int)(distanceMm * 1000.0);
-    }else if(hasAdvancedFeatures()){
+	  }else if(hasJettyAcceleration() || hasAdvancedFeatures()){
 
       Point5d stepsPerMM = getMachine().getStepsPerMM();
       switch(axis) {
         case 0:
-          offsetSteps = (int)(distanceMm*stepsPerMM.x()*10.0);
+          offsetSteps = (int)(distanceMm*stepsPerMM.x());
           break;
         case 1:
-          offsetSteps = (int)(distanceMm*stepsPerMM.y()*10.0);
+          offsetSteps = (int)(distanceMm*stepsPerMM.y());
           break;
         case 2:
-          offsetSteps = (int)(distanceMm*stepsPerMM.z()*10.0);
+          offsetSteps = (int)(distanceMm*stepsPerMM.z());
           break;
       }
     }else{

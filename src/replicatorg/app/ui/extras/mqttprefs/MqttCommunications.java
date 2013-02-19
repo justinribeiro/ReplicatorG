@@ -34,12 +34,21 @@ public class MqttCommunications implements MqttCallback {
     public MqttCommunications() {
 
     	try {
-    		// Construct the MqttClient instance
-    		client = new MqttClient(prefs.get("serveraddress", ""), prefs.get("publishprintername", ""));
     		
-			// Set this wrapper as the callback handler
-	    	client.setCallback(this);
-	    	
+    		String testWire = prefs.get("serveraddress", "");
+    		
+    		if(("").equals(testWire)) {
+    			
+    			client = null;
+    			
+    		} else {
+    			// Construct the MqttClient instance
+        		client = new MqttClient(prefs.get("serveraddress", ""), prefs.get("publishprintername", ""));
+        		
+    			// Set this wrapper as the callback handler
+    	    	client.setCallback(this);
+    		}
+    		
 		} catch (MqttException e) {
 			System.err.println("Could not wire mqtt");
 		}
@@ -59,8 +68,18 @@ public class MqttCommunications implements MqttCallback {
 		} else {
 			
 			try {
-				// Connect to the broker
-				client.connect();
+				
+				String testWire = prefs.get("serveraddress", "");
+	    		
+	    		if(("").equals(testWire)) {
+	    			
+	    			client = null;
+	    			
+	    		} else {
+
+					// Connect to the broker
+					client.connect();
+	    		}
 
 			} catch (MqttException ex) {
 				
@@ -107,8 +126,17 @@ public class MqttCommunications implements MqttCallback {
 		} else {
 			
 			try {
-				// Connect to the broker
-				client.connect();
+				String testWire = prefs.get("serveraddress", "");
+	    		
+	    		if(("").equals(testWire)) {
+	    			
+	    			client = null;
+	    			
+	    		} else {
+
+					// Connect to the broker
+					client.connect();
+	    		}
 
 			} catch (MqttException ex) {
 				
@@ -121,18 +149,20 @@ public class MqttCommunications implements MqttCallback {
     	// We're looking for something specific
     	String topicSetter = prefs.get("servertopic", "").concat("/get");
     	
-    	// Subscribe to the topic
-    	try {
-			client.subscribe(topicSetter, 2);
-			System.out.println("Subscribe complete");
-			
-		} catch (MqttSecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	if ((client != null) && client.isConnected()) {
+	    	// Subscribe to the topic
+	    	try {
+				client.subscribe(topicSetter, 2);
+				System.out.println("Subscribe complete");
+				
+			} catch (MqttSecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (MqttException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
 	}
 	
 	/**

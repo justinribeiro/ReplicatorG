@@ -105,6 +105,8 @@ public class Sanguino3GDriver extends SerialDriver implements
 		OnboardParameters, SDCardCapture, PenPlotter, MultiTool {
 	protected final static int DEFAULT_RETRIES = 5;
 
+    Point5d pastExcess = new Point5d(0, 0, 0, 0, 0);
+
 	Version toolVersion = new Version(0, 0);
 
 	private boolean eepromChecked = false;
@@ -759,10 +761,15 @@ public class Sanguino3GDriver extends SerialDriver implements
 		PacketBuilder pb = new PacketBuilder(
 				MotherboardCommandCode.SET_POSITION.getCode());
 
-		Point5d steps = machine.mmToSteps(p);
-		pb.add32((long) steps.x());
-		pb.add32((long) steps.y());
-		pb.add32((long) steps.z());
+		Point5d excess = pastExcess;
+		Point5d steps = machine.mmToSteps(p, excess);
+		pb.add32((int) steps.x());
+		pb.add32((int) steps.y());
+		pb.add32((int) steps.z());
+
+		//pb.add32((long) steps.x());
+		//pb.add32((long) steps.y());
+		//pb.add32((long) steps.z());
 
 		Base.logger.fine("Set current position to " + p + " (" + steps + ")");
 
@@ -2129,8 +2136,8 @@ public class Sanguino3GDriver extends SerialDriver implements
 
 	public void setMachineName(String machineName) {
 		machineName = new String(machineName);
-		if (machineName.length() > 16) {
-			machineName = machineName.substring(0, 16);
+		if (machineName.length() >= 16) {
+			machineName = machineName.substring(0, 15);
 		}
 		byte b[] = new byte[16];
 		int idx = 0;
@@ -2141,6 +2148,8 @@ public class Sanguino3GDriver extends SerialDriver implements
 		}
 		if (idx < 16)
 			b[idx] = 0;
+		else
+			b[15] = 0;
 		writeToEEPROM(Sanguino3GEEPRPOM.EEPROM_MACHINE_NAME_OFFSET, b);
 	}
 
