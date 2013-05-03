@@ -1404,7 +1404,7 @@ ToolpathGenerator.GeneratorListener
 			}
 			machine.runCommand(new replicatorg.drivers.commands.SelectTool(0)); /// for paranoia to get the right tool
 			machine.runCommand(new replicatorg.drivers.commands.SetTemperature(tool0Target,0));
-			machine.runCommand(new replicatorg.drivers.commands.SetPlatformTemperature(platTarget,0));
+			if (hasHBP(0)) machine.runCommand(new replicatorg.drivers.commands.SetPlatformTemperature(platTarget,0));
 			if(isDualDriver())
 			{
 					machine.runCommand(new replicatorg.drivers.commands.SelectTool(1)); /// for paranoia to get the right tool
@@ -1506,6 +1506,34 @@ ToolpathGenerator.GeneratorListener
 			System.out.println("test" + machineInter.getModel().getTools().size());
 			if( machineInter.getModel().getTools().size() == 2 ) {
 				return true;
+			}
+		}
+		catch(NullPointerException e)
+		{
+			System.err.println("Error");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public boolean hasHBP(int index)
+	{
+		try
+		{
+			//TRICKY: machieLoader may not be loaded yet 'naturally' so we force an early load
+			String mname = Base.preferences.get("machine.name", "error");
+
+			MachineInterface machineInter = machineLoader.getMachineInterface(mname);
+			if(machineInter == null){
+				Base.logger.fine("no valid machine for " + mname);
+				return false; //assume it's a single extruder
+			}
+			
+			//HEREHERE
+			
+			System.out.println("test" + machineInter.getModel().getTools().size());
+			if( machineInter.getModel().getTools().get(index).hasHeatedPlatform() ) {
+			    return true;
 			}
 		}
 		catch(NullPointerException e)
@@ -2350,15 +2378,15 @@ ToolpathGenerator.GeneratorListener
       s3gFilter = new ExtensionFilter(".s3g"," .s3g  (For use with firmware v3.5 or earlier)");
       x3gFilter = new ExtensionFilter(".x3g"," .x3g  (For use with firmware v4.1 or later)");
     } 
-		fc.addChoosableFileFilter(s3gFilter);
 		fc.addChoosableFileFilter(x3gFilter);
-		if(((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration() ||
-			(machineLoader.getDriver().getBuildToFileVersion() >= 4) ){
-			fc.setFileFilter(x3gFilter);
-		}
-		else{
-			fc.setFileFilter(s3gFilter);
-		}
+		fc.addChoosableFileFilter(s3gFilter);
+		// Always default to x3gFilter
+		fc.setFileFilter(x3gFilter);
+		//if(((OnboardParameters)machineLoader.getDriver()).hasJettyAcceleration() ||
+		//	(machineLoader.getDriver().getBuildToFileVersion() >= 4) )
+		//	fc.setFileFilter(x3gFilter);
+		//else
+		//	fc.setFileFilter(s3gFilter);
 
 		fc.setDialogTitle("Save Makerbot build as...");
 		fc.setDialogType(JFileChooser.SAVE_DIALOG);

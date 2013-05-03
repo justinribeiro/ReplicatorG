@@ -293,6 +293,12 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 	}
 
 	@Override
+	public void pauseAtZPos(double zpos)
+			throws RetryException {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public void homeAxes(EnumSet<AxisId> axes, boolean positive, double feedrate)
 			throws RetryException {
 		// TODO Auto-generated method stub
@@ -752,4 +758,9 @@ public class VirtualPrinter implements Driver, DriverQueryInterface {
 	public String getConfigValue(String value, String baseline) {
 		return baseline;
 	}
+
+	public boolean getPStop() { return false; }
+
+	public void setPStop(boolean enable) { return; }
+
 }
