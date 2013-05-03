@@ -56,6 +56,7 @@ public interface OnboardParameters {
 		DITTO_PRINT_ENABLED,	    //
 		ENDSTOPS_USED,              //
 		ENDSTOP_INVERSION,          //
+	        ENDSTOP_Z_MIN,              //
 		ESTOP_CONFIGURATION,        //
 		EXTRUDE_DURATION,           //
 		EXTRUDER_HOLD,		    //
@@ -75,9 +76,11 @@ public interface OnboardParameters {
 		MOOD_LIGHT_SCRIPT,          //
 		OVERRIDE_GCODE_TEMP,        // Override gcode temp settings with preheat temps
 		PLATFORM_TEMP,              // Preheat & Override build platform temperature (C)
+		PSTOP_ENABLE,               // Enable/disable the firmware Pause Stop (P-Stop)
 		PREHEAT_DURING_ESTIMATE,    // Start preheating while estimating build time
 		PREHEAT_DURING_PAUSE,       // Preheat during pause
 		RAM_USAGE_DEBUG,            // SRAM highwater mark
+		SD_USE_CRC,                 // Perform SD card CRC checks
 		STEPPER_DRIVER,             // Bit 0: accel driver on/off, bit 1: planner on/off, bit 2: strangled on/off
 		STEPS_PER_MM_A,             // A axis steps per millimeter (steps/mm)
 		STEPS_PER_MM_B,             // B axis steps per millimeter (steps/mm)
@@ -322,5 +325,11 @@ public interface OnboardParameters {
 	boolean hasJettyAcceleration();
 	/// Returns true if the driver has the advanced reporting feature set
 	boolean hasAdvancedFeatures();
+
+	/// Enable or disable the P-Stop
+	void setPStop(boolean enable);
+
+	/// Query the P-Stop setting in EEPROM
+	boolean getPStop();
 }
 

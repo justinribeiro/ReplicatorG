@@ -104,11 +104,12 @@ public class Base {
 	 * The version number of this edition of replicatorG.
 	 */
 	public static final int VERSION = 40;
+	public static final int REVISION = 16;
 	
 	/**
 	 * The textual representation of this version (4 digits, zero padded).
 	 */
-	public static final String VERSION_NAME = String.format("Sailfish - %04dr5",VERSION);
+	public static final String VERSION_NAME = String.format("Sailfish - %04dr%2d",VERSION,REVISION);
 
 	/**
 	 * The machine controller in use.

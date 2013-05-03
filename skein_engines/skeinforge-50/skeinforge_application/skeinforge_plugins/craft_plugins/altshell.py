@@ -28,9 +28,14 @@ The default 'Activate Altshell' checkbox is off, enable it if you would like an 
 
 ===Use M320/M321 Commands===
 
-Use M320/M321 to enable / disable acceleration if checked.
+Use M320/M321 to enable  / disable acceleration if checked.
 When unchecked, uses Open/Close Valve (M126/M127).
 For Makerbot and Sailfish firmwares, use M320/M321.  For the Jetty Firmware (v3.5 and earlier), do not use M320/M321.
+
+===Include All Shells/Loops===
+
+Disable acceleration for all shells when checked.
+When unchecked, acceleration is only disabled for exterior shells.  When checked, acceleration is disabled for all shells.
 """
 
 from __future__ import absolute_import
@@ -85,6 +90,7 @@ class AltshellRepository:
 		self.fileNameInput = settings.FileNameInput().getFromFileName( fabmetheus_interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Altshell', self, '' )
 		self.activateAltshell = settings.BooleanSetting().getFromValue( 'Activate Altshell', self, False)
 		self.useM320M321 = settings.BooleanSetting().getFromValue( 'Use M320/M321', self, True)
+		self.includeLoops = settings.BooleanSetting().getFromValue( 'Include All Shells/Loops', self, False)
 		self.executeTitle = 'Altshell'
 
 	def execute( self ):
@@ -107,6 +113,25 @@ class AltshellSkein:
 			self.parseLine( line )
 		return self.distanceFeedRate.output.getvalue()
 
+	def nonTravelMove( self, tokens ):
+		if not tokens:
+			return False
+
+		tok = tokens[0].upper()
+		if tok != 'G1':
+			return False
+
+		xyz = False
+		eab = False
+		for tok in tokens[1:]:
+			tok = tok.upper()
+			if tok[0] == 'X' or tok[0] == 'Y' or tok[0] == 'Z':
+				xyz = True
+			elif tok[0] == 'E' or tok[0] == 'A' or tok[0] == 'B':
+				eab = True
+
+		return xyz and eab
+
 	def parseLine( self, line ):
 		""""
 		Parse a gcode line and add it to the altshell skein.
@@ -122,10 +147,11 @@ class AltshellSkein:
 
 		firstWord = splitLine[ 0 ]
 
-		if line == '(<perimeter> outer )' or line == '(<perimeter> inner )':
+		if line == '(<edge> outer )' or line == '(<edge> inner )':
 			self.state = 1
-	
-		elif firstWord == '(</perimeter>)':
+		elif self.repository.includeLoops.value and ( line == '(<loop> outer )' or line == '(<loop> inner )' or line == '(<edgePath>)' ):
+			self.state = 1
+		elif firstWord == '(</edge>)' or ( self.repository.includeLoops.value and ( firstWord == '(</loop>)' or firstWord == '(</edgePath>)' ) ):
 			if self.state == 3:
 				# Open valve command
 				if self.repository.useM320M321.value:
@@ -138,6 +164,16 @@ class AltshellSkein:
 			if self.state == 1:
 				# Found first M101 for outer perimeter
 				self.state = 2
+
+		elif self.repository.includeLoops.value and self.nonTravelMove( splitLine ):
+			# Looks like we started a loop without a travel move signified by a M101
+			if self.state == 1:
+				# Close valve command
+				if self.repository.useM320M321.value:
+					self.distanceFeedRate.addLine( 'M321' )
+				else:
+					self.distanceFeedRate.addLine( 'M127' )
+				self.state = 3
 
 		self.distanceFeedRate.addLine( line )
 		if self.state == 2:

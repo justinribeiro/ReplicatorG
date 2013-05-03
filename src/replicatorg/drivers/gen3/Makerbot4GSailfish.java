@@ -72,6 +72,7 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
 	 */
 	public Makerbot4GSailfish() {
 		super();
+		absoluteXYZ = true;
 		ledColorByEffect = new Hashtable();
 		ledColorByEffect.put(0, Color.BLACK);
 		Base.logger.info("Created a Sailfish");
@@ -393,33 +394,39 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
 			
 			Point5d stepsPerMM = machine.getStepsPerMM();
 			
+			//
+			// Commented out 4/16/13 Jetty.  Likely redundant and an overhang from RPM days.
+			//
 			// if either a or b is 0, but their motor is on, create a distance for them
-			if(deltaMM.a() == 0) {
-				ToolModel aTool = extruderHijackedMap.get(AxisId.A);
-				if(aTool != null && aTool.isMotorEnabled()) {
-					// minute * revolution/minute
-					double numRevolutions = minutes * aTool.getMotorSpeedRPM();
-					// steps/revolution * mm/steps 	
-					double mmPerRevolution = aTool.getMotorSteps() * (1/stepsPerMM.a());
-					// set distance
-					target.setA( -(numRevolutions * mmPerRevolution));
-				}
-			}
-			if(deltaMM.b() == 0) {
-				ToolModel bTool = extruderHijackedMap.get(AxisId.B);
-				if(bTool != null && bTool.isMotorEnabled()) {
-					// minute * revolution/minute
-					double numRevolutions = minutes * bTool.getMotorSpeedRPM();
-					// steps/revolution * mm/steps 	
-					double mmPerRevolution = bTool.getMotorSteps() * (1/stepsPerMM.b());
-					// set distance
-					target.setB( -(numRevolutions * mmPerRevolution));
-				}
-			}
+			//if(deltaMM.a() == 0) {
+			//	ToolModel aTool = extruderHijackedMap.get(AxisId.A);
+			//	if(aTool != null && aTool.isMotorEnabled()) {
+			//		// minute * revolution/minute
+			//		double numRevolutions = minutes * aTool.getMotorSpeedRPM();
+			//		// steps/revolution * mm/steps 	
+			//		double mmPerRevolution = aTool.getMotorSteps() * (1/stepsPerMM.a());
+			//		// set distance
+			//		target.setA( -(numRevolutions * mmPerRevolution));
+			//	}
+			//}
+			//if(deltaMM.b() == 0) {
+			//	ToolModel bTool = extruderHijackedMap.get(AxisId.B);
+			//	if(bTool != null && bTool.isMotorEnabled()) {
+			//		// minute * revolution/minute
+			//		double numRevolutions = minutes * bTool.getMotorSpeedRPM();
+			//		// steps/revolution * mm/steps 	
+			//		double mmPerRevolution = bTool.getMotorSteps() * (1/stepsPerMM.b());
+			//		// set distance
+			//		target.setB( -(numRevolutions * mmPerRevolution));
+			//	}
+			//}
 			
 			// calculate absolute position of target in steps
 			Point5d excess = new Point5d(stepExcess);
+			// X, Y, and Z are absolute moves and should not accumulate roundoff errors!
+			excess.setX(0); excess.setY(0); excess.setZ(0);
 			Point5d steps = machine.mmToSteps(target,excess);	
+			excess.setX(0); excess.setY(0); excess.setZ(0);
 			
 			double usec = (60 * 1000 * 1000 * minutes);
 
@@ -451,6 +458,7 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
 //			}
 
 			// Only update excess if no retry was thrown.
+			pastExcess = new Point5d(stepExcess);
 			stepExcess = excess;
 
 			// because of the hinky stuff we've been doing with A & B axes, just pretend we've
@@ -1028,6 +1036,9 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
                 case DITTO_PRINT_ENABLED        : return getUInt8EEPROM(SailfishEEPROM.DITTO_PRINT_ENABLED);
 		case EXTRUDER_HOLD              : return getUInt8EEPROM(SailfishEEPROM.EXTRUDER_HOLD);
 		case TOOLHEAD_OFFSET_SYSTEM     : return getUInt8EEPROM(SailfishEEPROM.TOOLHEAD_OFFSET_SYSTEM);
+		case SD_USE_CRC                 : return getUInt8EEPROM(SailfishEEPROM.SD_USE_CRC);
+		case PSTOP_ENABLE               : return getUInt8EEPROM(SailfishEEPROM.PSTOP_ENABLE);
+		case ENDSTOP_Z_MIN              : return getUInt8EEPROM(SailfishEEPROM.ENDSTOP_Z_MIN);
 		default				: return super.getEEPROMParamInt(param);
                 }
         }
@@ -1049,6 +1060,9 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
                 case DITTO_PRINT_ENABLED        : setUInt8EEPROM(SailfishEEPROM.DITTO_PRINT_ENABLED, (val != 0) ? 1 : 0); break;
 		case EXTRUDER_HOLD              : setUInt8EEPROM(SailfishEEPROM.EXTRUDER_HOLD, (val != 0) ? 1 : 0); break;
 		case TOOLHEAD_OFFSET_SYSTEM     : setUInt8EEPROM(SailfishEEPROM.TOOLHEAD_OFFSET_SYSTEM, (val != 0) ? 1 : 0); break;
+		case SD_USE_CRC                 : setUInt8EEPROM(SailfishEEPROM.SD_USE_CRC, (val != 0) ? 1 : 0); break;
+		case PSTOP_ENABLE               : setUInt8EEPROM(SailfishEEPROM.PSTOP_ENABLE, (val != 0) ? 1 : 0); break;
+		case ENDSTOP_Z_MIN              : setUInt8EEPROM(SailfishEEPROM.ENDSTOP_Z_MIN, (val != 0) ? 1 : 0); break;
 		default				: super.setEEPROMParam(param, val); break;
 		}
 	}
@@ -1073,5 +1087,16 @@ public class Makerbot4GSailfish extends Makerbot4GAlternateDriver
 		case ACCEL_MAX_SPEED_CHANGE_B   : setUInt32EEPROM(SailfishEEPROM.ACCEL_MAX_SPEED_CHANGE_B, (long)(val * 10.0d)); break;
 		default				: super.setEEPROMParam(param, val); break;
 		}
+	}
+
+	@Override
+	public boolean getPStop() {
+		return ( 1 == getEEPROMParamInt(OnboardParameters.EEPROMParams.PSTOP_ENABLE) );
+	}
+
+	@Override
+	public void setPStop(boolean enable) {
+		setEEPROMParam(OnboardParameters.EEPROMParams.PSTOP_ENABLE, enable ? (int)1 : (int)0);
+		return;
 	}
 }

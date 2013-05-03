@@ -235,6 +235,11 @@ public interface Driver {
 	public void setAccelerationToggle(boolean on) throws RetryException;
 
 	/**
+	 * sets pause@Zpos
+	 */
+	public void pauseAtZPos(double zpos) throws RetryException;
+
+	/**
 	 * Home the given set of axes at the given feedrate.  If the feedrate is <=0, run at
 	 * maximum feedrate for the appropriate axes.
 	 * @throws RetryException 
@@ -467,7 +472,14 @@ public interface Driver {
 	 * reads temperature from all heated build platforms
 	 */
 	public void readAllPlatformTemperatures();
-	
 
+	/**
+	 * Enable or disable the P-Stop firmware/hardware function
+	 */
+	public void setPStop(boolean enable);
 
+	/**
+	 * Report the state of the P-Stop firmware/hardware setting
+	 */
+	public boolean getPStop();
 }
