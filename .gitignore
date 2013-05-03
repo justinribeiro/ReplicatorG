@@ -20,3 +20,5 @@ ReplicatorG.app
 .DS_Store
 *.tmp
 *.svn
+/bin
+/.pydevproject
