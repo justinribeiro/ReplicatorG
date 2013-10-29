@@ -105,15 +105,13 @@ public class Sanguino3GDriver extends SerialDriver implements
 		OnboardParameters, SDCardCapture, PenPlotter, MultiTool {
 	protected final static int DEFAULT_RETRIES = 5;
 
-        Point5d pastExcess = new Point5d(0, 0, 0, 0, 0);
+    Point5d pastExcess = new Point5d(0, 0, 0, 0, 0);
 
 	Version toolVersion = new Version(0, 0);
 
 	private boolean eepromChecked = false;
         
         protected boolean acceleratedFirmware = false;
-
-        protected boolean absoluteXYZ = false;
 
 	public Sanguino3GDriver() {
 		super();
@@ -763,8 +761,7 @@ public class Sanguino3GDriver extends SerialDriver implements
 		PacketBuilder pb = new PacketBuilder(
 				MotherboardCommandCode.SET_POSITION.getCode());
 
-		Point5d excess = new Point5d(pastExcess);
-		if ( absoluteXYZ ) { excess.setX(0); excess.setY(0); excess.setZ(0); }
+		Point5d excess = pastExcess;
 		Point5d steps = machine.mmToSteps(p, excess);
 		pb.add32((int) steps.x());
 		pb.add32((int) steps.y());
@@ -2997,4 +2994,5 @@ public class Sanguino3GDriver extends SerialDriver implements
 		// TODO Auto-generated method stub
 		
 	}
+	
 }

@@ -13,12 +13,23 @@ G1 Z0.0 (move Z to "0")
 G161 Z F100 (home Z axis minimum)
 M132 X Y Z A B (Recall stored home offsets for XYZAB axis)
 (**** end homing ****)
+<<<<<<< HEAD
 G1 X-110.5 Y-74 Z50 F3300.0 (move to waiting position)
 G130 X20 Y20 Z20 A20 B20 (Lower stepper Vrefs while heating)
+=======
+G1 X-110.5 Y-72 Z50 F3300.0 (move to waiting position)
+G130 X20 Y20 A20 B20 (Lower stepper Vrefs while heating)
+>>>>>>> refs/remotes/jetty/master
 M6 T0 (wait for toolhead, and HBP to reach temperature)
+<<<<<<< HEAD
 G130 X127 Y127 Z40 A127 B127 (Set Stepper motor Vref to defaults)
 M108 T0
 G0 X-110.5 Y-74 (Position Nozzle)
+=======
+G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
+M108 T0
+G0 X-110.5 Y-72 (Position Nozzle)
+>>>>>>> refs/remotes/jetty/master
 G0 Z0.6      (Position Height)
 G92 E0 (Set E to 0)
 G1 E4 F300 (Extrude 4mm of filament)

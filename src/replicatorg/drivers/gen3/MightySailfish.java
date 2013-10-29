@@ -168,7 +168,6 @@ class MightySailfish5XEEPROM implements EEPROMClass
 	/// 2 bytes padding
 	/// Light Effect table. 3 Bytes x 3 entries
 	final public static int LED_STRIP_SETTINGS		= 0x0140;
-	final public static int CUSTOM_COLOR_OFFSET             = 0x0144;
 	/// Buzz Effect table. 4 Bytes x 3 entries
 	/// 1 byte padding for offsets
 	final public static int BUZZ_SETTINGS		= 0x014A;
@@ -272,7 +271,6 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 	 */
 	public MightySailfish() {
 		super();
-		absoluteXYZ = true;
 		ledColorByEffect = new Hashtable();
 		ledColorByEffect.put(0, Color.BLACK);
 		Base.logger.info("Created a MightySailfish");
@@ -823,39 +821,33 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 			
 			Point5d stepsPerMM = machine.getStepsPerMM();
 			
-			//
-			// Commented out 4/16/13 Jetty.  Likely redundant and an overhang from RPM days.
-			//
 			// if either a or b is 0, but their motor is on, create a distance for them
-			//if(deltaMM.a() == 0) {
-			//	ToolModel aTool = extruderHijackedMap.get(AxisId.A);
-			//	if(aTool != null && aTool.isMotorEnabled()) {
-			//		// minute * revolution/minute
-			//		double numRevolutions = minutes * aTool.getMotorSpeedRPM();
-			//		// steps/revolution * mm/steps 	
-			//		double mmPerRevolution = aTool.getMotorSteps() * (1/stepsPerMM.a());
-			//		// set distance
-			//		target.setA( -(numRevolutions * mmPerRevolution));
-			//	}
-			//}
-			//if(deltaMM.b() == 0) {
-			//	ToolModel bTool = extruderHijackedMap.get(AxisId.B);
-			//	if(bTool != null && bTool.isMotorEnabled()) {
-			//		// minute * revolution/minute
-			//		double numRevolutions = minutes * bTool.getMotorSpeedRPM();
-			//		// steps/revolution * mm/steps 	
-			//		double mmPerRevolution = bTool.getMotorSteps() * (1/stepsPerMM.b());
-			//		// set distance
-			//		target.setB( -(numRevolutions * mmPerRevolution));
-			//	}
-			//}
+			if(deltaMM.a() == 0) {
+				ToolModel aTool = extruderHijackedMap.get(AxisId.A);
+				if(aTool != null && aTool.isMotorEnabled()) {
+					// minute * revolution/minute
+					double numRevolutions = minutes * aTool.getMotorSpeedRPM();
+					// steps/revolution * mm/steps 	
+					double mmPerRevolution = aTool.getMotorSteps() * (1/stepsPerMM.a());
+					// set distance
+					target.setA( -(numRevolutions * mmPerRevolution));
+				}
+			}
+			if(deltaMM.b() == 0) {
+				ToolModel bTool = extruderHijackedMap.get(AxisId.B);
+				if(bTool != null && bTool.isMotorEnabled()) {
+					// minute * revolution/minute
+					double numRevolutions = minutes * bTool.getMotorSpeedRPM();
+					// steps/revolution * mm/steps 	
+					double mmPerRevolution = bTool.getMotorSteps() * (1/stepsPerMM.b());
+					// set distance
+					target.setB( -(numRevolutions * mmPerRevolution));
+				}
+			}
 			
 			// calculate absolute position of target in steps
 			Point5d excess = new Point5d(stepExcess);
-			// X, Y, and Z are absolute moves and should not accumulate roundoff errors!
-			excess.setX(0); excess.setY(0); excess.setZ(0);
-			Point5d steps = machine.mmToSteps(target,excess);
-			excess.setX(0); excess.setY(0); excess.setZ(0);
+			Point5d steps = machine.mmToSteps(target,excess);	
 			
 			double usec = (60 * 1000 * 1000 * minutes);
 
@@ -887,7 +879,7 @@ public class MightySailfish extends Makerbot4GAlternateDriver
       queueNewPoint(steps, (long)usec, relativeAxes);
     }
 			// Only update excess if no retry was thrown.
-                        pastExcess = new Point5d(stepExcess);
+			pastExcess = stepExcess;
 			stepExcess = excess;
 
 			// because of the hinky stuff we've been doing with A & B axes, just pretend we've
@@ -2174,6 +2166,7 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 	public Point3d getOffset(int i) {
 		if(!hasAdvancedFeatures())
 			return offsets[i];
+		Base.logger.info("offsets deprecated in firmware: " + version.toString());
 		return offsets[0];
 	}
 
@@ -2182,8 +2175,9 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 	public void setOffsetX(int offsetSystemNum, double j) {
 		if(!hasAdvancedFeatures())
 			offsets[offsetSystemNum].x = j;
-		else
-			Base.logger.info("offsets deprecated in firmware: " + version.toString());
+    else
+		  Base.logger.info("offsets deprecated in firmware: " + version.toString());
+    
 	}
 
 	@Override
@@ -2191,8 +2185,8 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 	public void setOffsetY(int offsetSystemNum, double j) {
 		if(!hasAdvancedFeatures())
 			offsets[offsetSystemNum].y = j;
-		else
-			Base.logger.info("offsets deprecated in firmware: " + version.toString());
+    else
+      Base.logger.info("offsets deprecated in firmware: " + version.toString());
 	}
 
 	@Override
@@ -2200,8 +2194,8 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 	public void setOffsetZ(int offsetSystemNum, double j) {
 		if(!hasAdvancedFeatures())
 			offsets[offsetSystemNum].z = j;
-		else
-			Base.logger.info("offsets deprecated in firmware: " + version.toString());
+    else
+      Base.logger.info("offsets deprecated in firmware: " + version.toString());	
 	}
 
 
@@ -2312,8 +2306,6 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 		case OVERRIDE_GCODE_TEMP        : return getUInt8EEPROM(JettyMBEEPROM.OVERRIDE_GCODE_TEMP);
 		case EXTRUDER_HOLD              : return getUInt8EEPROM(JettyMBEEPROM.EXTRUDER_HOLD);
 		case TOOLHEAD_OFFSET_SYSTEM     : return getUInt8EEPROM(JettyMBEEPROM.TOOLHEAD_OFFSET_SYSTEM);
-		case SD_USE_CRC                 : return getUInt8EEPROM(JettyMBEEPROM.SD_USE_CRC);
-		case PSTOP_ENABLE               : return getUInt8EEPROM(JettyMBEEPROM.PSTOP_ENABLE);
 		default :
 			Base.logger.log(Level.WARNING, "getEEPROMParamInt(" + param + ") call failed");
 			return 0;
@@ -2364,8 +2356,6 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 		case OVERRIDE_GCODE_TEMP        : setUInt8EEPROM(JettyMBEEPROM.OVERRIDE_GCODE_TEMP, (val != 0) ? 1 : 0); break;
 		case EXTRUDER_HOLD              : setUInt8EEPROM(JettyMBEEPROM.EXTRUDER_HOLD, (val != 0) ? 1 : 0); break;
 		case TOOLHEAD_OFFSET_SYSTEM     : setUInt8EEPROM(JettyMBEEPROM.TOOLHEAD_OFFSET_SYSTEM, (val != 0) ? 1 : 0); break;
-		case SD_USE_CRC                 : setUInt8EEPROM(JettyMBEEPROM.SD_USE_CRC, (val != 0) ? 1 : 0); break;
-		case PSTOP_ENABLE               : setUInt8EEPROM(JettyMBEEPROM.PSTOP_ENABLE, (val != 0) ? 1 : 0); break;
 		default : Base.logger.log(Level.WARNING, "setEEPROMParam(" + param + ", " + val + ") call failed"); break;
 		}
 	}
@@ -2389,19 +2379,7 @@ public class MightySailfish extends Makerbot4GAlternateDriver
 		default : Base.logger.log(Level.WARNING, "setEEPROMParam(" + param + ", " + val + ") call failed"); break;
 		}
 	}
-
-	@Override
-	public boolean getPStop() {
-		return ( 1 == getEEPROMParamInt(OnboardParameters.EEPROMParams.PSTOP_ENABLE) );
-	}
-
-	@Override
-	public void setPStop(boolean enable) {
-		setEEPROMParam(OnboardParameters.EEPROMParams.PSTOP_ENABLE, enable ? (int)1 : (int)0);
-		return;
-	}
 }
-
 /* footnote[1]:
  MakerBot added a bunch of awesome advanced features, new commands, and new EEPROM layout for version 6
  of firmware. This firmware is shipped for several products, especially Replicator and Replicator 2. 
